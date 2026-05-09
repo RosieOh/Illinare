@@ -1,26 +1,185 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ──────────────────────────────────────────────────────────────────────
+ * Design tokens (Tailwind v4 @theme)
+ * - 70% 무채/표면, 30% 강조(시안)의 비율을 유지하기 위한 토큰 셋
+ * - 알파로 가독성을 깎지 말 것. 비활성은 명도(slate)로 표현한다.
+ * ────────────────────────────────────────────────────────────────────── */
+@theme {
+  /* Surfaces — 어두운 슬레이트 베이스 */
+  --color-surface-base: #060a14;
+  --color-surface-1: #0c1424;
+  --color-surface-2: #131c30;
+  --color-surface-3: #1b2640;
+  --color-border: #1f2c44;
+  --color-border-strong: #2c3d5c;
+
+  /* Text — 알파 의존 금지, 명도로 위계 표현 */
+  --color-text-primary: #e6edf6;
+  --color-text-secondary: #a3b3c9;
+  --color-text-muted: #6c7d97;
+  --color-text-disabled: #475264;
+
+  /* Accent — 강조에만 사용 */
+  --color-accent: #38bdf8;        /* sky-400, 시안보다 약간 묵직 */
+  --color-accent-strong: #67e8f9; /* hover/glow */
+  --color-accent-soft: #1e3a5c;   /* 활성 배경 */
+  --color-accent-ring: rgba(56, 189, 248, 0.45);
+
+  /* Semantic */
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+  --color-info: #60a5fa;
+
+  /* Spacing — 4단계로 제한 */
+  --space-1: 0.5rem;   /* 8 */
+  --space-2: 0.75rem;  /* 12 */
+  --space-3: 1rem;     /* 16 */
+  --space-4: 1.5rem;   /* 24 */
+
+  /* Radii */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+
+  /* Type scale */
+  --font-size-xs: 12px;
+  --font-size-sm: 13px;
+  --font-size-base: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 20px;
+  --font-size-xl: 28px;
+  --font-size-2xl: 40px;
+
+  /* Motion */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 120ms;
+  --duration-base: 220ms;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* ──────────────────────────────────────────────────────────────────────
+ * Reset / base
+ * ────────────────────────────────────────────────────────────────────── */
+* { box-sizing: border-box; }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-surface-base);
+  color: var(--color-text-primary);
+  /* Geist Sans — layout.tsx에서 주입한 변수 사용 */
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-size: var(--font-size-base);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* 데스크톱 키오스크 모드는 페이지 단의 컨테이너에서 처리.
+   * 전역 overflow:hidden은 모바일/접근성 위험이 있어 제거. */
+  min-height: 100vh;
+}
+
+/* 데이터/모노 스페이스용 유틸리티 */
+.font-mono,
+[data-mono] {
+  font-family: var(--font-geist-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+ * Surfaces
+ * ────────────────────────────────────────────────────────────────────── */
+.surface {
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.surface-2 {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+/* 강조용 — 1뷰당 1~2개로 제한해서 사용할 것 */
+.surface-accent {
+  background: linear-gradient(180deg, var(--color-surface-2), var(--color-surface-1));
+  border: 1px solid var(--color-accent-soft);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.06), 0 18px 48px -24px rgba(56, 189, 248, 0.35);
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+ * Focus — 키보드 접근성 (focus-visible 통일)
+ * ────────────────────────────────────────────────────────────────────── */
+:where(button, a, input, textarea, select, [tabindex]):focus { outline: none; }
+:where(button, a, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+ * Text helpers
+ * ────────────────────────────────────────────────────────────────────── */
+.text-primary { color: var(--color-text-primary); }
+.text-secondary { color: var(--color-text-secondary); }
+.text-muted { color: var(--color-text-muted); }
+.text-accent { color: var(--color-accent); }
+
+/* glow는 핵심 강조에만 — 한 화면에 1~2개 권장 */
+.text-glow {
+  text-shadow:
+    0 0 10px rgba(103, 232, 249, 0.55),
+    0 0 24px rgba(56, 189, 248, 0.25);
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+ * Scrollbar
+ * ────────────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--color-accent-soft); }
+
+/* ──────────────────────────────────────────────────────────────────────
+ * Animations — motion 토큰
+ * ────────────────────────────────────────────────────────────────────── */
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+.pulse-soft { animation: pulse-soft 2s var(--ease-standard) infinite; }
+
+@keyframes status-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.6; }
+}
+.status-pulse { animation: status-pulse 1.5s var(--ease-standard) infinite; }
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.cursor-blink { animation: blink 1s step-end infinite; }
+
+/* ──────────────────────────────────────────────────────────────────────
+ * Reduced motion — 전정장애 사용자 보호
+ * 모든 무한 애니메이션, framer-motion 트랜지션도 즉시 종료시킴
+ * ────────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
