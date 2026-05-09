@@ -5,6 +5,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
   Send, Mic, MicOff, Sparkles,
   Wrench, CheckCircle2, XCircle, ShieldAlert, AlertTriangle, Loader2,
+  Square, Trash2,
 } from 'lucide-react';
 import { speakKorean } from '@/utils/speech';
 
@@ -103,6 +104,7 @@ export default function ChatInterface({ onActivity }: { onActivity: (active: boo
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const apiMessagesRef = useRef<ApiMessage[]>([]);
   const partialResultsRef = useRef<Record<string, string>>({});
+  const abortRef = useRef<AbortController | null>(null);
   const reduce = useReducedMotion();
 
   useEffect(() => {
@@ -193,34 +195,59 @@ export default function ChatInterface({ onActivity }: { onActivity: (active: boo
     ];
     partialResultsRef.current = {};
 
+    const controller = new AbortController();
+    abortRef.current = controller;
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: apiMessagesRef.current }),
+        signal: controller.signal,
       });
       const data = (await res.json()) as ChatResponse;
       applyResponse(data);
-    } catch {
+    } catch (err) {
+      const aborted = err instanceof Error && err.name === 'AbortError';
       setItems((prev) => [
         ...prev,
         {
           kind: 'jarvis',
           id: `e-${Date.now()}`,
-          text: 'API 연결 오류가 발생했습니다.',
+          text: aborted ? '요청을 중단했습니다.' : 'API 연결 오류가 발생했습니다.',
           timestamp: nowStr(),
         },
       ]);
     } finally {
+      abortRef.current = null;
       setIsThinking(false);
       setTimeout(() => onActivity(false), 2000);
     }
   };
 
+  // ── 진행 중인 요청 중단 ─────────────────────────────────────
+  const abortInFlight = () => {
+    abortRef.current?.abort();
+  };
+
+  // ── 대화 초기화 ─────────────────────────────────────────────
+  const clearConversation = () => {
+    abortInFlight();
+    apiMessagesRef.current = [];
+    partialResultsRef.current = {};
+    setItems([
+      {
+        kind: 'jarvis',
+        id: `init-${Date.now()}`,
+        text: '대화가 초기화되었습니다. 명령을 내려주십시오, 보스.',
+        timestamp: nowStr(),
+        isLatest: true,
+      },
+    ]);
+  };
+
   // ── 승인/거부 결정 후 재요청 ─────────────────────────────────
   const resolveDecisions = async (decisions: Record<string, 'approve' | 'deny'>) => {
     if (isThinking) return;
-    // pending 카드 제거 (해당 ids 모두 결정된 경우만)
     setItems((prev) =>
       prev.filter((it) => {
         if (it.kind !== 'pending') return true;
@@ -231,6 +258,8 @@ export default function ChatInterface({ onActivity }: { onActivity: (active: boo
 
     setIsThinking(true);
     onActivity(true);
+    const controller = new AbortController();
+    abortRef.current = controller;
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -240,22 +269,24 @@ export default function ChatInterface({ onActivity }: { onActivity: (active: boo
           decisions,
           partialResults: partialResultsRef.current,
         }),
+        signal: controller.signal,
       });
       const data = (await res.json()) as ChatResponse;
       applyResponse(data);
-      // partial은 소비됨
       if (data.done) partialResultsRef.current = {};
-    } catch {
+    } catch (err) {
+      const aborted = err instanceof Error && err.name === 'AbortError';
       setItems((prev) => [
         ...prev,
         {
           kind: 'jarvis',
           id: `e-${Date.now()}`,
-          text: '승인 처리 중 오류가 발생했습니다.',
+          text: aborted ? '요청을 중단했습니다.' : '승인 처리 중 오류가 발생했습니다.',
           timestamp: nowStr(),
         },
       ]);
     } finally {
+      abortRef.current = null;
       setIsThinking(false);
       setTimeout(() => onActivity(false), 2000);
     }
@@ -298,14 +329,22 @@ export default function ChatInterface({ onActivity }: { onActivity: (active: boo
 
   return (
     <div className="flex flex-col h-full" role="region" aria-label="AI 채팅 인터페이스">
-      <header className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <Sparkles size={14} className="text-accent" aria-hidden="true" />
-          <span className="text-xs tracking-widest text-secondary uppercase">
+      <header className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] flex-shrink-0 gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <Sparkles size={14} className="text-accent flex-shrink-0" aria-hidden="true" />
+          <span className="text-xs tracking-widest text-secondary uppercase truncate">
             일리네어 v7.4 · macOS 제어
           </span>
         </div>
-        <span className="text-[10px] text-muted uppercase tracking-widest">tool-use</span>
+        <button
+          type="button"
+          onClick={clearConversation}
+          aria-label="대화 초기화"
+          title="대화 초기화"
+          className="p-1.5 rounded-md border border-[var(--color-border)] text-muted hover:text-[var(--color-danger)] hover:border-[var(--color-danger)]/40 transition-colors"
+        >
+          <Trash2 size={12} aria-hidden="true" />
+        </button>
       </header>
 
       <div
@@ -347,7 +386,16 @@ export default function ChatInterface({ onActivity }: { onActivity: (active: boo
             >
               <div className="surface rounded-md px-3 py-2 text-xs text-muted flex items-center gap-2">
                 <Loader2 size={12} className="animate-spin text-accent" aria-hidden="true" />
-                일리네어 처리중...
+                <span>일리네어 처리중...</span>
+                <button
+                  type="button"
+                  onClick={abortInFlight}
+                  aria-label="요청 중단"
+                  className="ml-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-[var(--color-border)] text-muted hover:text-[var(--color-danger)] hover:border-[var(--color-danger)]/40 transition-colors"
+                >
+                  <Square size={9} aria-hidden="true" />
+                  <span>중단</span>
+                </button>
               </div>
             </motion.div>
           )}
