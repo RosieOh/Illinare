@@ -15,11 +15,12 @@ register<{ text: string }>({
     additionalProperties: false,
   },
   summarize: ({ text }) => `기억하기: "${text.slice(0, 80)}${text.length > 80 ? '…' : ''}"`,
+  recordSummary: ({ text }) => `기억하기 (${text.length}자)`,
   async preview({ text }) {
     return { kind: 'text', text };
   },
   async run({ text }) {
-    const item = await addMemory(text, 'agent');
-    return `기억했습니다: ${item.text}`;
+    await addMemory(text, 'agent');
+    return `기억했습니다 (${text.length}자)`;
   },
 });

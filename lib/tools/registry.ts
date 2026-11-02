@@ -42,6 +42,8 @@ export interface ToolDef<I = unknown> {
   agents: AgentId[];
   /** 사용자에게 보여줄 사람-읽기용 요약 (승인 카드 본문) */
   summarize: (input: I) => string;
+  /** 요약에 내용이 들어가는 도구는 이것을 준다. 미션 기록과 감사 기록에는 이 요약만 남는다. */
+  recordSummary?: (input: I) => string;
   /** Claude tool input_schema (JSON Schema) */
   schema: Record<string, unknown>;
   /** 실제 실행. 결과 문자열은 tool_result로 전달된다. */
@@ -77,9 +79,10 @@ export function targetsHardLink<T>(tool: Pick<ToolDef<T>, 'targetPath'>, input: 
 
 /** 모든 도구의 요약과 미리보기는 보이지 않는 문자를 드러낸 뒤에 나간다. */
 export function register<T>(def: ToolDef<T>) {
-  const { summarize, preview } = def;
+  const { summarize, recordSummary, preview } = def;
   const shown: ToolDef<T> = {
     ...def,
+    recordSummary: recordSummary ? (input) => displaySummary(recordSummary(input)) : undefined,
     summarize: (input) => {
       const text = summarize(input);
       return displaySummary(targetsHardLink(def, input) ? `${text} (${HARD_LINK_NOTE})` : text);

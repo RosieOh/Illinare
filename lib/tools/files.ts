@@ -21,7 +21,11 @@ const IMAGE_TYPES: Record<string, 'image/png' | 'image/jpeg' | 'image/webp' | 'i
   '.webp': 'image/webp',
   '.gif': 'image/gif',
 };
-const PREVIEW_LIMIT = 8 * 1024;
+/**
+ * 승인 카드의 미리보기 한도. 모델 출력 한도(64,000토큰) 안의 쓰기는 끝까지 볼 수 있어야 한다.
+ * 위험한 내용은 긴 글 끝에 숨기 쉽다. 변경 전 내용도 같은 길이로 읽어야 비교가 틀리지 않는다.
+ */
+export const PREVIEW_LIMIT = 256 * 1024;
 const LIST_LIMIT = 200;
 const SEARCH_LIMIT = 30;
 const SEARCH_MAX_DEPTH = 7;

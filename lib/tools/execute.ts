@@ -23,10 +23,11 @@ export interface ExecuteMeta {
   tainted: boolean;
 }
 
+/** 감사 기록에 남길 요약. 요약에 내용이 들어가는 도구는 저장용 요약을 쓴다. */
 function summarizeSafely(tool: ToolDef<unknown> | undefined, name: string, input: unknown): string {
   if (!tool) return name;
   try {
-    return tool.summarize(input);
+    return (tool.recordSummary ?? tool.summarize)(input);
   } catch {
     return name;
   }

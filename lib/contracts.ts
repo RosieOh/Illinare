@@ -110,6 +110,7 @@ export interface ToolCallView {
   agent: AgentId;
   name: string;
   summary: string;
+  /** 저장용 입력. 식별자만 그대로 두고 쓰기 내용 같은 글은 { bytes, sha256 }으로 바뀐다. */
   input: unknown;
   risk: ToolRisk;
   /** 서버 측 도구(web_search 등)이면 true */
@@ -141,6 +142,8 @@ export interface ApprovalRequest {
   tool?: string;
   /** 사람이 읽는 작업 요약 */
   summary: string;
+  /** 요약에 내용이 들어가는 도구의 저장용 요약. 디스크에는 summary 자리에 이 값이 남는다. */
+  recordSummary?: string;
   risk: ToolRisk;
   /** 승인이 필요한 이유 (위험 등급, 외부 데이터 오염 등) */
   reason: string;

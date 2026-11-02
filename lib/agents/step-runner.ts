@@ -19,7 +19,7 @@ import { getTool, type ToolContext, type ToolDef } from '@/lib/tools/registry';
 import { validateInput } from '@/lib/tools/validate';
 import { runAgentLoop, type AgentHooks } from './agent-loop';
 import { WEB_ACCESS_APPROVAL } from './approvals';
-import { compactInput, compactResult, withAttachment, wrapToolOutput } from './context';
+import { compactResult, recordedInput, withAttachment, wrapToolOutput } from './context';
 import { CancelledError, EmptyResponseError } from './errors';
 import type { LlmClient, ToolResultBlockParam, ToolUnion, ToolUseBlock } from './llm';
 import { SPECIALISTS, UNTRUSTED_SERVER_TOOLS } from './roster';
@@ -43,7 +43,8 @@ export interface StepEnv {
   emit: (body: MissionEventBody) => void;
   /** 모델 호출 직전. 예산을 넘었으면 throw */
   beforeModelCall: AgentHooks['beforeModelCall'];
-  askApproval: (approval: ApprovalRequest) => Promise<ApprovalDecision>;
+  /** input은 승인을 기다리는 동안만 보관할 도구 입력 원문이다. */
+  askApproval: (approval: ApprovalRequest, input?: unknown) => Promise<ApprovalDecision>;
 }
 
 export interface StepOptions {
@@ -77,6 +78,15 @@ interface Decision {
 function safeSummary(tool: ToolDef<unknown>, input: unknown): string {
   try {
     return tool.summarize(input);
+  } catch {
+    return tool.name;
+  }
+}
+
+/** 이벤트에 남는 요약. 승인 카드만 내용이 든 요약을 본다. */
+function safeRecordSummary(tool: ToolDef<unknown>, input: unknown): string {
+  try {
+    return (tool.recordSummary ?? tool.summarize)(input);
   } catch {
     return tool.name;
   }
@@ -133,7 +143,7 @@ export async function runStep(env: StepEnv, step: PlanStep, options: StepOptions
       agent,
       name,
       summary,
-      input: compactInput(input),
+      input: recordedInput(input),
       risk,
       serverSide: serverSide || undefined,
       status: 'running',
@@ -180,20 +190,24 @@ export async function runStep(env: StepEnv, step: PlanStep, options: StepOptions
     }
     let decision: ApprovalDecision;
     try {
-      decision = await env.askApproval({
-        id: newId('ap'),
-        kind: 'tool',
-        stepId: step.id,
-        agent,
-        callId: d.block.id,
-        tool: d.block.name,
-        summary: d.summary,
-        risk: d.risk,
-        reason: d.reason,
-        preview,
-        tainted: d.tainted || undefined,
-        requestedAt: Date.now(),
-      });
+      decision = await env.askApproval(
+        {
+          id: newId('ap'),
+          kind: 'tool',
+          stepId: step.id,
+          agent,
+          callId: d.block.id,
+          tool: d.block.name,
+          summary: d.summary,
+          recordSummary: safeRecordSummary(d.tool, d.input),
+          risk: d.risk,
+          reason: d.reason,
+          preview,
+          tainted: d.tainted || undefined,
+          requestedAt: Date.now(),
+        },
+        d.input
+      );
     } catch (err) {
       finishCall(d.block.id, 'denied', '미션이 취소되어 실행하지 않았어요.');
       throw err;
@@ -227,7 +241,7 @@ export async function runStep(env: StepEnv, step: PlanStep, options: StepOptions
 
       const summary = safeSummary(tool, block.input);
       const risk = effectiveRisk(tool, block.input);
-      startCall(block.id, block.name, summary, block.input, risk);
+      startCall(block.id, block.name, safeRecordSummary(tool, block.input), block.input, risk);
 
       // 스트리밍 파서는 잘린 입력을 그대로 돌려줄 수 있어 승인 카드에 올리기 전에 검증한다.
       let input: Record<string, unknown>;

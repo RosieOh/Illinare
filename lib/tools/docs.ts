@@ -2,7 +2,7 @@ import { promises as fs } from 'node:fs';
 import { join } from 'node:path';
 import type { DeckSlide } from '@/lib/contracts';
 import { addDeck } from '@/lib/store/decks';
-import { writeWithJournal } from './files';
+import { PREVIEW_LIMIT, writeWithJournal } from './files';
 import { desktopDir, safeWritePath } from './paths';
 import { register } from './registry';
 
@@ -34,8 +34,8 @@ register<{ name: string; content: string }>({
     return {
       kind: 'text',
       path: noteFile(name),
-      text: content.slice(0, 8192),
-      truncated: content.length > 8192,
+      text: content.slice(0, PREVIEW_LIMIT),
+      truncated: content.length > PREVIEW_LIMIT,
     };
   },
   async run({ name, content }, ctx) {

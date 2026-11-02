@@ -129,9 +129,10 @@ register<{ title: string; body?: string; sound?: string }>({
     additionalProperties: false,
   },
   summarize: ({ title, body }) => `알림: ${title}${body ? ` / ${body}` : ''}`,
+  recordSummary: ({ title, body }) => `알림 표시 (${title.length + (body?.length ?? 0)}자)`,
   async run(input) {
     await getPlatform().notify(input);
-    return `알림을 표시했습니다: ${input.title}`;
+    return '알림을 표시했습니다';
   },
 });
 
@@ -153,6 +154,7 @@ register<{ text: string; voice?: string }>({
     additionalProperties: false,
   },
   summarize: ({ text }) => `음성 출력 (${text.length}자): "${headAndTail(text, 40, 40)}"`,
+  recordSummary: ({ text }) => `음성 출력 (${text.length}자)`,
   async run(input) {
     await getPlatform().say(input);
     return '음성 출력을 마쳤습니다';
@@ -193,6 +195,7 @@ register<{ text: string }>({
   },
   // 붙여넣게 만들려는 명령은 긴 글 끝에 숨기 쉽다. 요약에 앞뒤를 모두 보이고 미리보기로 전문을 보여준다.
   summarize: ({ text }) => `클립보드에 복사 (${text.length}자): "${headAndTail(text)}"`,
+  recordSummary: ({ text }) => `클립보드에 복사 (${text.length}자)`,
   async preview({ text }) {
     return { kind: 'text', text, truncated: false };
   },

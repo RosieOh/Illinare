@@ -29,11 +29,16 @@ import {
   isMissionId,
   listStoredMissionIds,
   loadEvents,
+  loadPendingInputs,
   loadSnapshot,
   MissionWriter,
+  persistableEvent,
+  removePendingInputs,
   repairEventLogTail,
   replayEvents,
+  settlePendingInputs,
   summaryOf,
+  withInterruptedInputs,
 } from './persistence';
 import { makePlan, PLAN_FALLBACK_NOTE } from './planner';
 import {
@@ -53,6 +58,7 @@ const ANSWER_MAX_TOKENS = 64_000;
 /** 재시작 뒤 복구 이벤트의 seq를 이만큼 건너뛴다. 클라이언트가 이미 더 큰 seq를 봤을 수 있다 (디스크에 못 쓴 이벤트). */
 const RECOVERY_SEQ_JUMP = 1000;
 const TRUNCATED_NOTE = '\n\n(응답이 길이 제한에 걸려 여기서 끊겼어요.)';
+const INTERRUPTED_NOTE = '승인을 기다리던 중 앱이 다시 시작되어 실행하지 않았어요. 입력 내용은 후속 지시를 보내거나 미션을 지우면 함께 지워져요.';
 export const MAX_GOAL_CHARS = 8000;
 
 type Emit = (body: MissionEventBody) => void;
@@ -100,14 +106,26 @@ class Mission {
     this.seq = view.seq;
   }
 
-  /** 재시작으로 끊긴 미션을 닫는다. 클라이언트가 무시하지 않도록 seq를 건너뛴다. */
-  closeAfterRestart() {
+  /**
+   * 재시작으로 끊긴 미션을 닫는다. 클라이언트가 무시하지 않도록 seq를 건너뛴다.
+   * 에이전트의 대화 상태는 메모리에만 있어 대기 중이던 승인은 이어갈 수 없다. 실행하지 않고 입력만 볼 수 있게 남긴다.
+   */
+  closeAfterRestart(interruptedCalls: string[] = []) {
     this.seq += RECOVERY_SEQ_JUMP;
     this.emit({
       type: 'mission.error',
       code: 'internal',
       message: '앱이 다시 시작되어 이 미션을 이어갈 수 없어요. 후속 지시로 다시 요청해 주세요.',
     });
+    const emit: Emit = (body) => this.emit(body);
+    for (const stepId of this.view.stepOrder) {
+      for (const call of this.view.steps[stepId].toolCalls) {
+        if (call.status === 'running' && interruptedCalls.includes(call.callId)) {
+          emit({ type: 'tool.finished', stepId, callId: call.callId, status: 'denied', result: INTERRUPTED_NOTE });
+        }
+      }
+    }
+    this.closeOpenWork('failed', emit);
     this.emit({ type: 'mission.finished', status: 'failed' });
   }
 
@@ -116,6 +134,7 @@ class Mission {
     this.view = applyMissionEvent(this.view ?? null, event);
     this.events.push(event);
     this.writer.record(event, this.view);
+    this.forgetDecided(event);
     for (const fn of this.subscribers) {
       try {
         fn(event);
@@ -123,6 +142,22 @@ class Mission {
         console.error('[mission] 구독자 오류', err);
       }
     }
+  }
+
+  /**
+   * 결정이 나면 내용을 더 들고 있지 않는다. 재연결 때 이벤트를 다시 보내므로 메모리의 이벤트에서도 뺀다.
+   * 대기 중인 동안에는 그대로 둔다. 끊겼다 다시 붙은 화면도 승인 카드의 비교를 볼 수 있어야 한다.
+   */
+  private forgetDecided(event: MissionEvent) {
+    if (event.type !== 'approval.resolved' && event.type !== 'mission.finished') return;
+    this.events.forEach((earlier, index) => {
+      if (earlier.type !== 'approval.requested') return;
+      if (event.type === 'mission.finished' || earlier.approval.id === event.id) {
+        this.events[index] = persistableEvent(earlier);
+      }
+    });
+    if (event.type === 'approval.resolved') this.writer.dropPending(event.id);
+    else this.writer.dropUndecidedPending();
   }
 
   subscribe(fn: (event: MissionEvent) => void): () => void {
@@ -180,10 +215,11 @@ class Mission {
     }
   }
 
-  private askApproval(approval: ApprovalRequest, emit: Emit, signal: AbortSignal): Promise<ApprovalDecision> {
+  private askApproval(approval: ApprovalRequest, emit: Emit, signal: AbortSignal, input?: unknown): Promise<ApprovalDecision> {
     // 취소 뒤에 등록하면 아무도 풀어주지 않는 대기자가 남는다.
     if (signal.aborted || this.terminal) return Promise.reject(new CancelledError());
     const wait = requestApproval(this.id, approval);
+    if (input !== undefined) this.writer.savePending(approval, input);
     emit({ type: 'approval.requested', approval });
     this.syncApprovalStatus();
     return wait;
@@ -411,7 +447,7 @@ class Mission {
             signal,
             emit,
             beforeModelCall: (estimate) => ctx.budget.acquire(signal, { estimate, parallelism: Math.min(MAX_CONCURRENT_STEPS, plan.steps.length) }),
-            askApproval: (approval) => this.askApproval(approval, emit, signal),
+            askApproval: (approval, input) => this.askApproval(approval, emit, signal, input),
           },
           step,
           {
@@ -597,12 +633,14 @@ function ensureLoaded(): Promise<void> {
         if (!view) continue;
         if (isTerminal(view.status)) {
           registry.summaries.set(id, summaryOf(view));
+          await settlePendingInputs(id, []);
           continue;
         }
         await repairEventLogTail(id);
+        const interrupted = await settlePendingInputs(id, view.approvals.map((a) => a.id));
         const mission = new Mission(id);
         mission.restore(events, view);
-        mission.closeAfterRestart();
+        mission.closeAfterRestart(interrupted);
         await mission.flush();
         registry.summaries.set(id, summaryOf(mission.view));
       } catch (err) {
@@ -683,6 +721,8 @@ export async function followupMission(id: string, rawGoal: unknown): Promise<boo
   // 상한을 올렸거나 키를 등록했다면 이번 턴부터 적용한다.
   const [apiKey, settings] = await Promise.all([getApiKey(), getSettings()]);
   if (!mission.terminal) throw activeError();
+  // 끊긴 승인의 입력은 사용자가 이어갈지 정할 때까지만 남겨 둔다.
+  await removePendingInputs(id);
   mission.followup(goal, { budgetUsd: settings.budgetUsd, mode: apiKey ? 'live' : 'demo' });
   return true;
 }
@@ -690,9 +730,8 @@ export async function followupMission(id: string, rawGoal: unknown): Promise<boo
 export async function getMissionView(id: string): Promise<MissionView | null> {
   if (!isMissionId(id)) return null;
   await ensureLoaded();
-  const live = registry.live.get(id);
-  if (live) return live.view;
-  return (await loadSnapshot(id)) ?? replayEvents(await loadEvents(id));
+  const view = registry.live.get(id)?.view ?? (await loadSnapshot(id)) ?? replayEvents(await loadEvents(id));
+  return view && withInterruptedInputs(view, await loadPendingInputs(id));
 }
 
 export async function listMissionSummaries(): Promise<MissionSummary[]> {
