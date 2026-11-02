@@ -1,33 +1,51 @@
 {
-  "name": "jarvis",
-  "version": "0.1.0",
+  "name": "illionaire",
+  "version": "0.9.0",
   "private": true,
+  "description": "내 컴퓨터에서 일하는 AI 팀",
+  "author": "Illionaire",
+  "main": "electron/main.mjs",
   "scripts": {
     "dev": "next dev -H 127.0.0.1",
     "build": "next build",
     "start": "next start -H 127.0.0.1",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "live-check": "node scripts/live-check.mjs",
+    "desktop:dev": "node scripts/desktop-dev.mjs",
+    "desktop:prepare": "node scripts/desktop-prepare.mjs",
+    "desktop:pack": "next build && node scripts/desktop-prepare.mjs && electron-builder --dir",
+    "desktop:build": "next build && node scripts/desktop-prepare.mjs && electron-builder",
+    "postinstall": "node scripts/copy-vendor.mjs",
+    "predev": "node scripts/copy-vendor.mjs",
+    "prebuild": "node scripts/copy-vendor.mjs"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.80.0",
-    "@react-three/drei": "^10.7.7",
-    "@react-three/fiber": "^9.5.0",
-    "@types/three": "^0.183.1",
+    "@anthropic-ai/sdk": "^1.3.0",
+    "@mediapipe/hands": "^0.4.1675469240",
+    "fflate": "^0.8.3",
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.7.0",
     "next": "16.2.1",
+    "pretendard": "^1.3.9",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "three": "^0.183.2"
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^22.20.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "electron": "^45.2.1",
+    "electron-builder": "^26.18.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
+    "puppeteer-core": "^25.16.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^5.0.5"
   }
 }

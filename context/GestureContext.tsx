@@ -1,56 +1,106 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, useRef, ReactNode } from 'react';
+import { useSyncExternalStore } from 'react';
+import type { GestureType } from '@/lib/client/gesture/classify';
+import type { SwipeDirection } from '@/lib/client/gesture/motion';
 
-export type GestureType = 'none' | 'point' | 'pinch' | 'open' | 'fist' | 'peace';
+/**
+ * 제스처 상태 저장소. 프로바이더 없이 어디서나 구독한다.
+ * 커서 좌표처럼 매 프레임 바뀌는 값은 React 상태로 올리지 않고 구독자가 DOM을 직접 고친다.
+ */
+export type GesturePhase =
+  | 'off'
+  | 'requesting'
+  | 'loading'
+  | 'ready'
+  | 'paused'
+  | 'denied'
+  | 'no-camera'
+  | 'busy'
+  | 'model-failed'
+  | 'unsupported';
 
-export interface CursorPos { x: number; y: number }
-
-interface SwipeEvent { direction: 'left' | 'right'; timestamp: number }
-
-interface GestureContextValue {
+export interface GestureSnapshot {
+  phase: GesturePhase;
   gesture: GestureType;
-  cursorPos: CursorPos | null;
-  isCameraActive: boolean;
-  isModelLoaded: boolean;
-  lastSwipe: SwipeEvent | null;
-  toggleCamera: () => void;
-  setGesture: (g: GestureType) => void;
-  setCursorPos: (p: CursorPos | null) => void;
-  setModelLoaded: (v: boolean) => void;
-  emitSwipe: (dir: 'left' | 'right') => void;
+  handVisible: boolean;
 }
 
-const GestureContext = createContext<GestureContextValue | null>(null);
+const INITIAL: GestureSnapshot = { phase: 'off', gesture: 'none', handVisible: false };
 
-export function GestureProvider({ children }: { children: ReactNode }) {
-  const [gesture, setGesture] = useState<GestureType>('none');
-  const [cursorPos, setCursorPos] = useState<CursorPos | null>(null);
-  const [isCameraActive, setIsCameraActive] = useState(false);
-  const [isModelLoaded, setIsModelLoaded] = useState(false);
-  const [lastSwipe, setLastSwipe] = useState<SwipeEvent | null>(null);
+let snapshot = INITIAL;
+const stateListeners = new Set<() => void>();
 
-  const toggleCamera = useCallback(() => setIsCameraActive(v => !v), []);
-  const emitSwipe = useCallback((direction: 'left' | 'right') => {
-    setLastSwipe({ direction, timestamp: Date.now() });
-  }, []);
+export function setGestureState(patch: Partial<GestureSnapshot>) {
+  const next = { ...snapshot, ...patch };
+  if (next.phase === snapshot.phase && next.gesture === snapshot.gesture && next.handVisible === snapshot.handVisible) return;
+  snapshot = next;
+  stateListeners.forEach((fn) => fn());
+}
 
-  return (
-    <GestureContext.Provider value={{
-      gesture, cursorPos, isCameraActive, isModelLoaded, lastSwipe,
-      toggleCamera,
-      setGesture,
-      setCursorPos,
-      setModelLoaded: setIsModelLoaded,
-      emitSwipe,
-    }}>
-      {children}
-    </GestureContext.Provider>
+function subscribeState(fn: () => void) {
+  stateListeners.add(fn);
+  return () => {
+    stateListeners.delete(fn);
+  };
+}
+
+export function useGestureState(): GestureSnapshot {
+  return useSyncExternalStore(
+    subscribeState,
+    () => snapshot,
+    () => INITIAL
   );
 }
 
-export function useGesture() {
-  const ctx = useContext(GestureContext);
-  if (!ctx) throw new Error('useGesture must be used within GestureProvider');
-  return ctx;
+// ─── 스와이프 ────────────────────────────────────────────────
+const swipeListeners = new Set<(direction: SwipeDirection) => void>();
+
+export function emitSwipe(direction: SwipeDirection) {
+  swipeListeners.forEach((fn) => fn(direction));
+}
+
+/** 발표 화면처럼 스와이프에 반응하는 쪽에서 구독한다. 구독자가 없으면 스와이프는 아무 일도 하지 않는다. */
+export function subscribeSwipe(fn: (direction: SwipeDirection) => void) {
+  swipeListeners.add(fn);
+  return () => {
+    swipeListeners.delete(fn);
+  };
+}
+
+// ─── 커서 ────────────────────────────────────────────────────
+export interface CursorFrame {
+  visible: boolean;
+  x: number;
+  y: number;
+  pinching: boolean;
+  /** 가까운 버튼에 달라붙었는가 */
+  snapped: boolean;
+  /** 유지 제스처 진행률 0~1. 0이면 표시하지 않는다 */
+  hold: number;
+  holdLabel: string;
+}
+
+export const cursorFrame: CursorFrame = {
+  visible: false,
+  x: 0,
+  y: 0,
+  pinching: false,
+  snapped: false,
+  hold: 0,
+  holdLabel: '',
+};
+
+const cursorListeners = new Set<() => void>();
+
+export function publishCursor(patch: Partial<CursorFrame>) {
+  Object.assign(cursorFrame, patch);
+  cursorListeners.forEach((fn) => fn());
+}
+
+export function subscribeCursor(fn: () => void) {
+  cursorListeners.add(fn);
+  return () => {
+    cursorListeners.delete(fn);
+  };
 }
