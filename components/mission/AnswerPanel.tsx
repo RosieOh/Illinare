@@ -144,6 +144,7 @@ function AnswerActions({ view }: { view: MissionView }) {
   const { followup } = useMissions();
   const toast = useToast();
   const [saving, setSaving] = useState(false);
+  const [asking, setAsking] = useState(false);
 
   const copy = async () => {
     try {
@@ -166,10 +167,16 @@ function AnswerActions({ view }: { view: MissionView }) {
     }
   };
 
-  const toSlides = () =>
-    void followup(view.id, '이 결과를 발표 자료로 만들어 주세요.').catch((err) =>
-      toast({ tone: 'danger', title: '요청하지 못했어요', description: err instanceof ClientApiError ? err.message : undefined })
-    );
+  const toSlides = async () => {
+    setAsking(true);
+    try {
+      await followup(view.id, '이 결과를 발표 자료로 만들어 주세요.');
+    } catch (err) {
+      toast({ tone: 'danger', title: '요청하지 못했어요', description: err instanceof ClientApiError ? err.message : undefined });
+    } finally {
+      setAsking(false);
+    }
+  };
 
   return (
     <div className="-ml-3 flex flex-wrap items-center gap-1">
@@ -182,7 +189,7 @@ function AnswerActions({ view }: { view: MissionView }) {
       <Button size="sm" variant="plain" icon={Sparkles} loading={saving} onClick={() => void saveRoutine()}>
         루틴으로 저장
       </Button>
-      <Button size="sm" variant="plain" icon={Presentation} onClick={toSlides}>
+      <Button size="sm" variant="plain" icon={Presentation} loading={asking} disabled={asking} onClick={() => void toSlides()}>
         슬라이드로 만들기
       </Button>
     </div>

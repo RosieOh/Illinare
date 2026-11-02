@@ -32,7 +32,7 @@ const mocks = vi.hoisted(() => ({
   recordDenied: vi.fn(),
 }));
 
-vi.mock('@/lib/store/secrets', () => ({ getApiKey: async () => mocks.apiKey }));
+vi.mock('@/lib/store/secrets', () => ({ getApiKey: async () => mocks.apiKey, apiKeyInfo: async () => ({ storage: 'none' }) }));
 vi.mock('@/lib/tools', () => ({}));
 vi.mock('@/lib/tools/anthropic', () => ({ anthropicToolsFor: () => [] }));
 vi.mock('@/lib/tools/execute', () => ({ executeTool: mocks.executeTool, recordDenied: mocks.recordDenied }));

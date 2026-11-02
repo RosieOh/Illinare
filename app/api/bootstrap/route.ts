@@ -12,7 +12,8 @@ export const GET = handle(async () => {
   const body: Bootstrap = {
     brand: BRAND,
     platform,
-    mode: key.hasApiKey ? 'live' : 'demo',
+    // 키가 있는데 잠깐 못 읽는 상태를 데모라고 부르지 않는다.
+    mode: key.hasApiKey || key.storage === 'unreadable' ? 'live' : 'demo',
     hasApiKey: key.hasApiKey,
     apiKeySource: key.source,
     apiKeyHint: key.hint,

@@ -28,7 +28,7 @@ const mocks = vi.hoisted(() => ({
   recordDenied: vi.fn(),
 }));
 
-vi.mock('@/lib/store/secrets', () => ({ getApiKey: async () => mocks.apiKey }));
+vi.mock('@/lib/store/secrets', () => ({ getApiKey: async () => mocks.apiKey, apiKeyInfo: async () => ({ storage: 'none' }) }));
 // 실제 도구를 실행하지 않는다. 등록도 테스트 도구만 한다.
 vi.mock('@/lib/tools', () => ({}));
 vi.mock('@/lib/tools/anthropic', () => ({ anthropicToolsFor: () => [] }));

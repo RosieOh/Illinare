@@ -2,6 +2,7 @@ import { mkdirSync, mkdtempSync, promises as fs, rmSync, writeFileSync } from 'n
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createMission, listMissionSummaries } from '@/lib/agents/mission';
 import { keyStorageNote } from '@/lib/client/format';
 import { runWithInput } from '@/lib/platform/exec';
 import { dpapiVault, keychainVault, platformVault, secretServiceVault, setKeyVaultForTests, type KeyVault, type VaultExec } from '@/lib/platform/keystore';
@@ -253,6 +254,17 @@ describe('a protected key that cannot be read right now', () => {
 
     state.failLoad = false;
     expect(await getApiKey()).toBe(KEY);
+  });
+
+  it('refuses to start a mission instead of quietly turning it into a demo', async () => {
+    const { vault, state } = memoryVault();
+    setKeyVaultForTests(vault);
+    await setApiKey(KEY);
+    forgetCachedKeyForTests();
+    state.failLoad = true;
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    await expect(createMission('실제로 해 줘')).rejects.toMatchObject({ status: 503, code: 'key_unreadable' });
+    expect(await listMissionSummaries()).toEqual([]);
   });
 
   it('reports unreadable when the folder came from another OS', async () => {

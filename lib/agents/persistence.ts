@@ -101,6 +101,11 @@ export function removePendingInputs(id: string): Promise<void> {
   return changePending(id, () => ({}));
 }
 
+/** 후속 지시: 끊긴 승인의 입력만 지운다. 돌고 있는 실행이 기다리는 승인은 건드리지 않는다. */
+export function removeInterruptedInputs(id: string): Promise<void> {
+  return changePending(id, (current) => Object.fromEntries(Object.entries(current).filter(([, entry]) => !entry.interruptedAt)));
+}
+
 /**
  * 재시작 때 부른다. 아직 대기 중이던 승인의 입력은 끊긴 것으로 표시해 남기고, 그 외에는 지운다
  * (결정은 났는데 지우기 전에 죽었거나 기한이 지난 것). 끊긴 호출의 id를 돌려준다.

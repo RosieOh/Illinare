@@ -9,7 +9,7 @@ import { POST as followupRoute } from '@/app/api/missions/[id]/followup/route';
 import { waitUntil } from './helpers';
 
 // 키가 없으면 데모 모드로 돌아가므로 실제 모델이나 도구 없이 라우트 전체를 지난다.
-vi.mock('@/lib/store/secrets', () => ({ getApiKey: async () => null }));
+vi.mock('@/lib/store/secrets', () => ({ getApiKey: async () => null, apiKeyInfo: async () => ({ storage: 'none' }) }));
 vi.mock('@/lib/tools', () => ({}));
 vi.mock('@/lib/tools/anthropic', () => ({ anthropicToolsFor: () => [] }));
 vi.mock('@/lib/tools/execute', () => ({ executeTool: vi.fn(), recordDenied: vi.fn() }));

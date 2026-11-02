@@ -14,7 +14,7 @@ import { TERMINAL_STATUSES } from '@/lib/contracts';
 import { applyMissionEvent } from '@/lib/missions/reducer';
 import { newId } from '@/lib/store/json';
 import { listMemory } from '@/lib/store/memory';
-import { getApiKey } from '@/lib/store/secrets';
+import { apiKeyInfo, getApiKey } from '@/lib/store/secrets';
 import { getSettings } from '@/lib/store/settings';
 import { ApiError } from '@/lib/server/http';
 import { DeltaCoalescer, runAgentLoop, type AgentHooks } from './agent-loop';
@@ -33,7 +33,7 @@ import {
   loadSnapshot,
   MissionWriter,
   persistableEvent,
-  removePendingInputs,
+  removeInterruptedInputs,
   repairEventLogTail,
   replayEvents,
   settlePendingInputs,
@@ -57,6 +57,8 @@ const MAX_LISTED = 200;
 const ANSWER_MAX_TOKENS = 64_000;
 /** 재시작 뒤 복구 이벤트의 seq를 이만큼 건너뛴다. 클라이언트가 이미 더 큰 seq를 봤을 수 있다 (디스크에 못 쓴 이벤트). */
 const RECOVERY_SEQ_JUMP = 1000;
+/** 지우기 전에 돌던 도구를 기다리는 시간. 멈추지 않는 도구 때문에 삭제가 끝없이 밀리면 안 된다. */
+const QUIESCE_MS = 5000;
 const TRUNCATED_NOTE = '\n\n(응답이 길이 제한에 걸려 여기서 끊겼어요.)';
 const INTERRUPTED_NOTE = '승인을 기다리던 중 앱이 다시 시작되어 실행하지 않았어요. 입력 내용은 후속 지시를 보내거나 미션을 지우면 함께 지워져요.';
 export const MAX_GOAL_CHARS = 8000;
@@ -94,6 +96,8 @@ class Mission {
   private controller = new AbortController();
   private runId = 0;
   settled: Promise<void> = Promise.resolve();
+  /** 이번 실행의 모델 호출과 도구가 실제로 끝났을 때 풀린다. settled는 취소되면 바로 풀린다. */
+  private flowDone: Promise<unknown> = Promise.resolve();
 
   constructor(readonly id: string) {
     this.writer = new MissionWriter(id);
@@ -173,11 +177,27 @@ class Mission {
     return isTerminal(this.view.status);
   }
 
-  /** 취소되었거나 끝난 실행에서 늦게 도착한 이벤트는 버린다. */
+  /**
+   * 취소되었거나 끝난 실행에서 늦게 도착한 이벤트는 버린다.
+   * 사용량만은 예외다. 취소된 호출의 비용도 실제로 나간 돈이라 기록에서 빠지면 안 된다.
+   */
   private scopedEmit(runId: number): Emit {
     return (body) => {
-      if (runId === this.runId && !this.terminal) this.emit(body);
+      if (runId === this.runId && (!this.terminal || body.type === 'usage')) this.emit(body);
     };
+  }
+
+  /**
+   * 파일을 지우기 직전에 부른다. 취소는 미션을 바로 닫지만 돌던 도구는 바로 멈추지 않으므로 잠깐 기다리고,
+   * 그 뒤에 도착하는 이벤트가 지운 파일을 되살리지 못하게 막는다.
+   */
+  async quiesce(): Promise<void> {
+    await this.settled;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    await Promise.race([this.flowDone, new Promise((resolve) => (timer = setTimeout(resolve, QUIESCE_MS)))]);
+    clearTimeout(timer);
+    if (this.terminal) this.runId++;
+    await this.flush();
   }
 
   start(goal: string) {
@@ -185,6 +205,8 @@ class Mission {
   }
 
   followup(goal: string, turn: { budgetUsd: number; mode: 'live' | 'demo' }) {
+    // 앞선 실행이 남아 있으면 끊는다. 버려진 실행이 상한과 화면 밖에서 계속 돌면 안 된다.
+    this.controller.abort();
     this.controller = new AbortController();
     this.emit({ type: 'mission.followup', goal, budgetUsd: turn.budgetUsd, mode: turn.mode });
     this.settled = this.runToEnd(goal).catch((err) => console.error('[mission] 실행 오류', err));
@@ -230,7 +252,7 @@ class Mission {
     const emit = this.scopedEmit(runId);
     const { signal } = this.controller;
     const flow = this.flow(goal, emit, signal);
-    flow.catch(() => undefined);
+    this.flowDone = flow.catch(() => undefined);
 
     let status: MissionStatus;
     try {
@@ -246,6 +268,8 @@ class Mission {
         status = 'failed';
       }
     }
+    // 새 턴이 이 실행을 이어받았다. 미션을 닫는 것은 그 턴의 몫이다.
+    if (runId !== this.runId) return;
     this.closeOpenWork(status, emit);
     this.emit({ type: 'mission.finished', status });
     cancelApprovals(this.id);
@@ -259,7 +283,7 @@ class Mission {
       const step = this.view.steps[stepId];
       for (const call of step.toolCalls) {
         if (call.status === 'running') {
-          emit({ type: 'tool.finished', stepId, callId: call.callId, status: 'denied', result: '미션이 끝나 중단됐어요.' });
+          emit({ type: 'tool.finished', stepId, callId: call.callId, status: 'denied', result: '미션이 끝나 결과를 기다리지 않았어요. 실제로 실행됐는지는 활동 기록에서 볼 수 있어요.' });
         }
       }
       if (step.status === 'pending' || step.status === 'running' || step.status === 'awaiting_approval') {
@@ -697,7 +721,7 @@ export async function createMission(rawGoal: unknown): Promise<string> {
   if (active >= MAX_ACTIVE_MISSIONS) {
     throw new ApiError(429, 'too_many_missions', `동시에 진행할 수 있는 미션은 ${MAX_ACTIVE_MISSIONS}개예요. 진행 중인 미션이 끝난 뒤에 다시 시도해 주세요.`);
   }
-  const [apiKey, settings] = await Promise.all([getApiKey(), getSettings()]);
+  const [mode, settings] = await Promise.all([missionMode(), getSettings()]);
   const id = newId('m');
   const mission = new Mission(id);
   registry.live.set(id, mission);
@@ -705,11 +729,20 @@ export async function createMission(rawGoal: unknown): Promise<string> {
     type: 'mission.created',
     id,
     goal,
-    mode: apiKey ? 'live' : 'demo',
+    mode,
     budgetUsd: settings.budgetUsd,
   });
   mission.start(goal);
   return id;
+}
+
+/** 키가 없는 것과 있는데 지금 못 읽는 것은 다르다. 후자를 데모로 돌리면 사용자는 가짜 결과를 진짜로 받는다. */
+async function missionMode(): Promise<'live' | 'demo'> {
+  if (await getApiKey()) return 'live';
+  if ((await apiKeyInfo()).storage === 'unreadable') {
+    throw new ApiError(503, 'key_unreadable', '저장된 API 키를 지금 읽지 못했어요. 잠시 후 다시 시도하거나 설정에서 키를 다시 등록해 주세요.');
+  }
+  return 'demo';
 }
 
 export async function followupMission(id: string, rawGoal: unknown): Promise<boolean> {
@@ -719,11 +752,12 @@ export async function followupMission(id: string, rawGoal: unknown): Promise<boo
   const activeError = () => new ApiError(409, 'mission_active', '아직 진행 중인 미션이에요. 끝난 뒤에 이어서 지시해 주세요.');
   if (!mission.terminal) throw activeError();
   // 상한을 올렸거나 키를 등록했다면 이번 턴부터 적용한다.
-  const [apiKey, settings] = await Promise.all([getApiKey(), getSettings()]);
-  if (!mission.terminal) throw activeError();
+  const [mode, settings] = await Promise.all([missionMode(), getSettings()]);
   // 끊긴 승인의 입력은 사용자가 이어갈지 정할 때까지만 남겨 둔다.
-  await removePendingInputs(id);
-  mission.followup(goal, { budgetUsd: settings.budgetUsd, mode: apiKey ? 'live' : 'demo' });
+  await removeInterruptedInputs(id);
+  // 이 확인과 시작 사이에 await를 두지 않는다. 동시에 온 지시가 둘 다 지나가면 실행이 둘이 된다.
+  if (!mission.terminal) throw activeError();
+  mission.followup(goal, { budgetUsd: settings.budgetUsd, mode });
   return true;
 }
 
@@ -748,6 +782,12 @@ export async function cancelOrDeleteMission(id: string): Promise<boolean> {
   if (!mission.terminal) {
     mission.cancel();
     return true;
+  }
+  await mission.quiesce();
+  // 기다리는 사이 후속 지시가 시작됐으면 그것까지 멈춘 뒤 지운다.
+  if (!mission.terminal) {
+    mission.cancel();
+    await mission.quiesce();
   }
   registry.live.delete(id);
   registry.summaries.delete(id);
@@ -798,7 +838,7 @@ export async function purgeAllMissions(): Promise<void> {
   for (const mission of missions) {
     if (!mission.terminal) mission.cancel();
   }
-  await Promise.all(missions.map((m) => m.settled.then(() => m.flush()).catch(() => undefined)));
+  await Promise.all(missions.map((m) => m.quiesce().catch(() => undefined)));
   registry.live.clear();
   registry.summaries.clear();
   registry.ready = null;
