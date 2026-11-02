@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'" />
+    <title>일리네어</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f5f5f8;
+        --label: rgba(0, 0, 0, 0.88);
+        --label-2: rgba(40, 40, 48, 0.8);
+        --accent: #007aff;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #1c1c1e;
+          --label: rgba(255, 255, 255, 0.96);
+          --label-2: rgba(235, 235, 245, 0.8);
+          --accent: #0a84ff;
+        }
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        background: var(--bg);
+        color: var(--label);
+        font-family: "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+        user-select: none;
+        -webkit-app-region: drag;
+      }
+      svg {
+        width: 44px;
+        height: 44px;
+        color: var(--accent);
+        animation: breathe 1.8s ease-in-out infinite;
+      }
+      h1 {
+        margin: 2px 0 0;
+        font-size: 16px;
+        font-weight: 600;
+      }
+      p {
+        margin: 0;
+        font-size: 13px;
+        color: var(--label-2);
+      }
+      @keyframes breathe {
+        50% {
+          transform: scale(1.08);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        svg {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <svg viewBox="0 0 28 28" aria-hidden="true" focusable="false">
+      <path fill="currentColor" d="M19.8 16.18C19.79 12.68 20.7 11.95 22.42 11.62A4.3 4.3 0 1 0 17.57 5.9C16.96 7.54 16.1 8.31 12.64 7.72A8.6 8.6 0 1 0 19.8 16.18Z" />
+    </svg>
+    <h1>일리네어</h1>
+    <p>시작하고 있어요</p>
+  </body>
+</html>

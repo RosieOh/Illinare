@@ -47,6 +47,9 @@ let saveTimer = null;
 let booted = false;
 /** 시작 중에 두 번째 실행이 들어오면 첫 창이 뜰 때 포커스를 준다. */
 let focusAfterBoot = false;
+let splash = null;
+let splashTimer = null;
+const SPLASH_DELAY_MS = 800;
 
 /**
  * 바깥 환경에서 받은 키는 서버에만 넘기고 메인 프로세스 환경에서는 지운다.
@@ -99,10 +102,12 @@ async function boot() {
   });
 
   for (;;) {
+    showSplashSoon();
     try {
       await startBackend();
       break;
     } catch (err) {
+      closeSplash();
       const retry = await showStartupError(err);
       server?.stop();
       if (!retry) return app.quit();
@@ -113,6 +118,34 @@ async function boot() {
   registerSummon();
   createWindow();
   booted = true;
+}
+
+/** 서버가 금방 뜨면 깜박이지 않게 아무것도 띄우지 않는다. 오래 걸리면 앱이 시작 중임을 보여 준다. */
+function showSplashSoon() {
+  closeSplash();
+  splashTimer = setTimeout(() => {
+    splash = new BrowserWindow({
+      width: 300,
+      height: 180,
+      frame: false,
+      resizable: false,
+      maximizable: false,
+      fullscreenable: false,
+      show: false,
+      title: APP_TITLE,
+      icon: isMac ? undefined : appIcon(),
+      backgroundColor: nativeTheme.shouldUseDarkColors ? '#1c1c1e' : '#f5f5f8',
+      webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true },
+    });
+    splash.once('ready-to-show', () => splash?.show());
+    void splash.loadFile(join(here, 'splash.html'));
+  }, SPLASH_DELAY_MS);
+}
+
+function closeSplash() {
+  clearTimeout(splashTimer);
+  if (splash && !splash.isDestroyed()) splash.destroy();
+  splash = null;
 }
 
 async function startBackend() {
@@ -236,6 +269,7 @@ function createWindow() {
     if (details.reason !== 'clean-exit' && !quitting) void win.loadURL(`${origin}/`);
   });
   win.once('ready-to-show', () => {
+    closeSplash();
     win.show();
     if (focusAfterBoot) {
       focusAfterBoot = false;

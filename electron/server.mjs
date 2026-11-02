@@ -4,7 +4,8 @@ import { get as httpGet } from 'node:http';
 import { createServer } from 'node:net';
 import { utilityProcess } from 'electron';
 
-const READY_TIMEOUT_MS = 30_000;
+/** 설치 직후 첫 실행은 백신 검사 때문에 오래 걸릴 수 있다. 그동안에는 시작 창이 떠 있다. */
+const READY_TIMEOUT_MS = 90_000;
 
 /** 지정한 포트가 비어 있으면 그대로 쓰고, 아니면 운영체제가 고른 빈 포트를 쓴다. */
 export async function pickPort(preferred) {

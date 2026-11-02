@@ -40,7 +40,8 @@ win:
 nsis:
   oneClick: false
   perMachine: false
-  allowToChangeInstallationDirectory: true
+  # 서버 파일 경로가 길어 설치 폴더가 134자를 넘으면 Windows 경로 제한으로 파일이 조용히 빠진다.
+  allowToChangeInstallationDirectory: false
   shortcutName: 일리네어
   installerLanguages:
     - ko_KR
