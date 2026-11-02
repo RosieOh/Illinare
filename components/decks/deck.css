@@ -1,0 +1,357 @@
+/* 슬라이드는 1280×720 고정 크기로 그리고 배율만 바꾼다. 화면, 썸네일, 인쇄가 같은 레이아웃을 쓴다. */
+.deck-slide {
+  position: relative;
+  isolation: isolate;
+  width: 1280px;
+  height: 720px;
+  overflow: hidden;
+  background: var(--slide-bg);
+  color: var(--slide-ink);
+  font-feature-settings: 'tnum', 'ss06';
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.deck-slide::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--slide-scrim);
+}
+
+.deck-slide[data-tone='dark'] {
+  --slide-ink: rgba(255, 255, 255, 0.97);
+  --slide-ink-2: rgba(238, 238, 248, 0.84);
+  --slide-ink-3: rgba(238, 238, 248, 0.68);
+  --slide-rule: rgba(238, 238, 248, 0.2);
+  --slide-track: rgba(238, 238, 248, 0.12);
+  --slide-mark: #2f8fff;
+  --slide-scrim: rgba(6, 10, 20, 0.44);
+}
+
+.deck-slide[data-tone='light'] {
+  --slide-ink: rgba(0, 0, 0, 0.9);
+  --slide-ink-2: rgba(24, 24, 32, 0.8);
+  --slide-ink-3: rgba(34, 34, 42, 0.72);
+  --slide-rule: rgba(40, 40, 52, 0.2);
+  --slide-track: rgba(40, 40, 52, 0.1);
+  --slide-mark: #0062cc;
+  --slide-scrim: rgba(255, 255, 255, 0.46);
+}
+
+.deck-body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 72px 88px;
+}
+
+.deck-h1 {
+  font-size: 92px;
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.deck-h2 {
+  flex-shrink: 0;
+  font-size: 54px;
+  font-weight: 700;
+  line-height: 1.16;
+  letter-spacing: -0.028em;
+  text-wrap: balance;
+}
+
+.deck-lede {
+  margin-top: 28px;
+  font-size: 34px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--slide-ink-2);
+  text-wrap: balance;
+}
+
+/* 불릿 */
+.deck-bullets {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1 0 auto;
+  gap: 26px;
+  margin-top: 40px;
+}
+
+.deck-bullets li {
+  display: flex;
+  align-items: baseline;
+  gap: 22px;
+  font-size: 34px;
+  font-weight: 500;
+  line-height: 1.34;
+}
+
+.deck-bullets li::before {
+  content: '';
+  flex: 0 0 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--slide-mark);
+  transform: translateY(-5px);
+}
+
+/* 수치 */
+.deck-stats {
+  display: grid;
+  flex: 1 0 auto;
+  align-content: center;
+  gap: 44px 48px;
+  margin-top: 40px;
+}
+
+.deck-stat {
+  padding-left: 28px;
+  border-left: 1px solid var(--slide-rule);
+}
+
+.deck-stat[data-row-start] {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.deck-stat-value {
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.deck-stat-label {
+  margin-top: 14px;
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.deck-stat-detail {
+  margin-top: 8px;
+  font-size: 24px;
+  line-height: 1.35;
+  color: var(--slide-ink-2);
+}
+
+/* 막대: 값과 목표는 글로 적고, 막대에는 위치만 표시한다 */
+.deck-bars {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1 0 auto;
+  gap: 30px;
+  margin-top: 36px;
+}
+
+.deck-bar-head {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  margin-bottom: 12px;
+  font-size: 28px;
+  line-height: 1.25;
+}
+
+.deck-bar-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 500;
+}
+
+.deck-bar-value {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.deck-bar-target {
+  font-size: 24px;
+  color: var(--slide-ink-2);
+}
+
+.deck-bar-track {
+  position: relative;
+  height: 24px;
+  background: var(--slide-track);
+}
+
+.deck-bar-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--slide-mark);
+  border-radius: 0 4px 4px 0;
+}
+
+.deck-bar-tick {
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  width: 3px;
+  margin-left: -1.5px;
+  background: var(--slide-ink);
+  border-radius: 2px;
+}
+
+.deck-bars-note {
+  flex-shrink: 0;
+  margin-top: 22px;
+  font-size: 22px;
+  color: var(--slide-ink-3);
+}
+
+/* 타임라인 */
+.deck-timeline {
+  position: relative;
+  display: grid;
+  flex: 1 0 auto;
+  align-content: center;
+  gap: 28px;
+  margin-top: 40px;
+}
+
+.deck-timeline-step {
+  position: relative;
+  padding-top: 38px;
+}
+
+.deck-timeline-step::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 0;
+  right: -28px;
+  height: 2px;
+  background: var(--slide-rule);
+}
+
+.deck-timeline-step:last-child::before {
+  right: 0;
+}
+
+.deck-timeline-step::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--slide-mark);
+}
+
+.deck-timeline-when {
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.deck-timeline-what {
+  margin-top: 12px;
+  font-size: 26px;
+  line-height: 1.4;
+  color: var(--slide-ink-2);
+}
+
+/* 항목이 많으면 세로로 편다 */
+.deck-timeline[data-vertical] {
+  grid-template-columns: 1fr;
+  gap: 22px;
+}
+
+.deck-timeline[data-vertical] .deck-timeline-step {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 24px;
+  padding: 0 0 0 34px;
+}
+
+.deck-timeline[data-vertical] .deck-timeline-step::before {
+  display: none;
+}
+
+.deck-timeline[data-vertical] .deck-timeline-step::after {
+  top: 12px;
+}
+
+.deck-timeline[data-vertical] .deck-timeline-what {
+  margin-top: 4px;
+}
+
+/* 인용 */
+.deck-quote {
+  font-size: 58px;
+  font-weight: 650;
+  line-height: 1.3;
+  letter-spacing: -0.025em;
+  text-wrap: pretty;
+}
+
+.deck-quote-source {
+  margin-top: 36px;
+  font-size: 30px;
+  font-weight: 500;
+  color: var(--slide-ink-2);
+}
+
+/* ─── 인쇄: 슬라이드마다 가로 한 페이지. 앱 화면은 찍지 않는다 ─── */
+/* 화면에서는 안 보이지만 레이아웃은 잡혀 있어야 긴 슬라이드의 글자 맞춤이 계산된다. */
+.deck-print {
+  position: fixed;
+  top: 0;
+  left: -400vw;
+  width: 1280px;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+@page deck-slide {
+  size: 1280px 720px;
+  margin: 0;
+}
+
+@media print {
+  html:has(> body > .deck-print),
+  body:has(> .deck-print) {
+    width: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    background: none !important;
+  }
+
+  body:has(> .deck-print) > *:not(.deck-print) {
+    display: none !important;
+  }
+
+  .deck-print {
+    position: static !important;
+    left: auto !important;
+    visibility: visible !important;
+  }
+
+  .deck-print-page {
+    page: deck-slide;
+    width: 1280px;
+    height: 720px;
+    overflow: hidden;
+    break-inside: avoid;
+    break-after: page;
+  }
+
+  .deck-print-page:last-child {
+    break-after: auto;
+  }
+}
