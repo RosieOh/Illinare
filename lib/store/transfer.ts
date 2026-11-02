@@ -43,7 +43,7 @@ export async function exportAll(): Promise<Record<string, unknown>> {
     listMemory(),
     listRoutines(),
     listDecks(),
-    listAudit({ limit: 100000 }),
+    listAudit({ limit: Number.POSITIVE_INFINITY }),
   ]);
   return {
     exportedAt: new Date().toISOString(),

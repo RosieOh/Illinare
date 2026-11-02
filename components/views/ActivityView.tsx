@@ -117,7 +117,7 @@ export default function ActivityView({ active }: ViewProps) {
 
   const exportAll = async () => {
     try {
-      const data = await api.get<{ entries: AuditEntry[] }>(`/api/audit?limit=${FETCH_LIMIT}`);
+      const data = await api.get<{ entries: AuditEntry[] }>('/api/audit?all=1');
       downloadJson('illionaire-activity', data.entries);
     } catch (err) {
       toast({ tone: 'danger', title: '내보내지 못했어요', description: err instanceof ClientApiError ? err.message : undefined });

@@ -234,6 +234,10 @@ describe('audit', () => {
     // 최근 항목만 필요하면 오래된 파일까지 내려가지 않아도 순서가 같다.
     expect((await listAudit({ limit: 1 }))[0].id).toBe(newest.id);
     expect(middle.tool).toBe('middle');
+
+    // 내보내기는 보관 파일까지 전부 담는다.
+    const exported = (await exportAll()) as { audit: { tool: string }[] };
+    expect(exported.audit.map((e) => e.tool)).toEqual(expect.arrayContaining(['newest', 'middle', 'oldest']));
   }, 60000);
 });
 
