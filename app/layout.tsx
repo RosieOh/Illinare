@@ -1,33 +1,46 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import type { Metadata, Viewport } from 'next';
+import localFont from 'next/font/local';
+import { BRAND } from '@/lib/contracts';
+import './globals.css';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const pretendard = localFont({
+  src: '../node_modules/pretendard/dist/web/variable/woff2/PretendardVariable.woff2',
+  variable: '--font-pretendard',
+  weight: '45 920',
+  display: 'swap',
+  adjustFontFallback: false,
 });
 
 export const metadata: Metadata = {
-  title: "일리네어 — AI 시스템",
-  description: "일리네어 인공지능 시스템",
+  title: BRAND.name,
+  description: BRAND.tagline,
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#e6eef8' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a1220' },
+  ],
+};
+
+/** 첫 페인트 전에 테마와 투명도를 정해 깜빡임을 막는다. AppContext가 같은 키에 값을 캐시한다. */
+const themeScript = `(function(){try{
+var s=localStorage.getItem('illionaire_theme')||'system';
+var d=s==='dark'||(s==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);
+var t=localStorage.getItem('illionaire_transparency')==='1'||matchMedia('(prefers-reduced-transparency: reduce)').matches||matchMedia('(prefers-contrast: more)').matches;
+var r=document.documentElement;r.dataset.theme=d?'dark':'light';r.dataset.transparency=t?'reduced':'full';
+}catch(e){document.documentElement.dataset.theme='light';}})();`;
+
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang="ko"
-      className={`${geistSans.variable} ${geistMono.variable} h-full`}
-    >
-      <body className="min-h-full">{children}</body>
+    <html lang="ko" className={pretendard.variable} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+      <body>{children}</body>
     </html>
   );
 }
