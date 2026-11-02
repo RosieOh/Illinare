@@ -9,10 +9,11 @@ import { dataDir, dataPath, readJson, updateJson } from './json';
 import { listMemory } from './memory';
 import { getNote, MAX_NOTE, setNote } from './note';
 import { listRoutines } from './routines';
+import { clearApiKey } from './secrets';
 import { getSettings } from './settings';
 import { importTasks, listTasks } from './tasks';
 
-/** 데이터 내보내기, 전체 삭제, 구버전 localStorage 이전. 키는 어느 쪽에도 포함하지 않는다. */
+/** 데이터 내보내기, 전체 삭제, 구버전 localStorage 이전. 내보내기에는 키를 넣지 않는다. */
 
 const SECRETS_FILE = 'secrets.json';
 const LEGACY_MARKER = 'legacy-imported.json';
@@ -58,7 +59,10 @@ export async function exportAll(): Promise<Record<string, unknown>> {
   };
 }
 
-/** 키 파일을 뺀 모든 사용자 데이터를 지운다. */
+/**
+ * 모든 사용자 데이터와 저장된 키를 지운다. 키 파일은 clearApiKey가 OS 저장소의 사본과 함께 지운다.
+ * 키를 지우지 못해도 나머지는 지우고 오류를 알린다. 키 파일의 표시가 남아 다시 시도할 수 있다.
+ */
 export async function deleteAllData(): Promise<void> {
   const entries = await fs.readdir(dataDir()).catch(() => [] as string[]);
   await Promise.all(
@@ -66,6 +70,7 @@ export async function deleteAllData(): Promise<void> {
       .filter((name) => name !== SECRETS_FILE)
       .map((name) => fs.rm(dataPath(name), { recursive: true, force: true }))
   );
+  await clearApiKey();
 }
 
 interface LegacyTodo {

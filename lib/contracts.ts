@@ -511,7 +511,7 @@ export interface Weather {
  * GET    /api/weather?city                      → Weather
  * POST   /api/data/import         { todos?, memo?, schedule? } → { ok: true } (구버전 localStorage 이전)
  * GET    /api/data/export                       → 전체 사용자 데이터 JSON (키 제외)
- * DELETE /api/data                              → { ok: true } (키 제외 전부 삭제)
+ * DELETE /api/data                              → { ok: true } (저장된 키까지 전부 삭제. 환경 변수 키는 건드리지 못한다)
  *
  * GET    /api/missions                          → { missions: MissionSummary[] }
  * POST   /api/missions            { goal }      → { id } (즉시 반환, 백그라운드 실행)

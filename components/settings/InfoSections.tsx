@@ -154,7 +154,7 @@ export function DataSection() {
       <Group title="모두 지우기">
         <ul className="list-disc space-y-1 pl-5 text-subhead text-label-2 marker:text-label-3">
           <li>설정, 할 일, 일정, 메모, 기억, 루틴, 발표 자료, 미션 기록, 활동 기록, 되돌리기 정보를 지워요.</li>
-          <li>API 키는 남아요. AI 항목에서 따로 지울 수 있어요.</li>
+          <li>이 기기에 저장한 API 키도 지워요. 환경 변수로 준 키는 앱에서 지울 수 없어요.</li>
           <li>바탕 화면에 저장한 노트와 스크린샷처럼 폴더 밖에 만든 파일은 지우지 않아요.</li>
         </ul>
         <Button variant="danger" icon={Trash2} className="mt-3" onClick={() => setConfirmOpen(true)}>

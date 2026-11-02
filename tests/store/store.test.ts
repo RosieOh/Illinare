@@ -292,7 +292,7 @@ describe('transfer', () => {
     expect(titles).not.toContain('팀 스탠드업');
   });
 
-  it('exports without the key and deletes everything but the key', async () => {
+  it('exports without the key and deletes everything including the key', async () => {
     await setApiKey('sk-ant-test-key-1234567890');
     const dump = await exportAll();
     expect(JSON.stringify(dump)).not.toContain('sk-ant-test');
@@ -300,8 +300,8 @@ describe('transfer', () => {
 
     await deleteAllData();
     expect(await listTasks()).toEqual([]);
-    expect(await getApiKey()).toBe('sk-ant-test-key-1234567890');
-    await clearApiKey();
+    expect(await getApiKey()).toBeNull();
+    await expect(fs.stat(dataPath('secrets.json'))).rejects.toThrow();
   });
 });
 

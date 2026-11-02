@@ -8,6 +8,8 @@ import { dpapiVault, keychainVault, platformVault, secretServiceVault, setKeyVau
 import { ps } from '@/lib/platform/powershell';
 import { dataDir, dataPath } from '@/lib/store/json';
 import { apiKeyInfo, clearApiKey, forgetCachedKeyForTests, getApiKey, setApiKey } from '@/lib/store/secrets';
+import { addTask, listTasks } from '@/lib/store/tasks';
+import { deleteAllData } from '@/lib/store/transfer';
 
 const KEY = 'sk-ant-unit-test-key-0123456789';
 const secretsFile = () => dataPath('secrets.json');
@@ -333,6 +335,41 @@ describe('clear removes the protected copy', () => {
     await expect(clearApiKey()).rejects.toThrow(/지우지 못했어요/);
   });
 
+});
+
+describe('delete-all removes the protected copy', () => {
+  it('removes the key too and drops the cache', async () => {
+    const { vault, state } = memoryVault();
+    setKeyVaultForTests(vault);
+    await setApiKey(KEY);
+    await addTask({ text: '지울 일' });
+    await deleteAllData();
+    expect(state.stored).toBeNull();
+    expect(await getApiKey()).toBeNull();
+    expect(await listTasks()).toEqual([]);
+    expect(await fs.readdir(dataDir()).catch(() => [])).toEqual([]);
+  });
+
+  it('still wipes everything else when the vault refuses, and reports it', async () => {
+    const { vault, state } = memoryVault();
+    setKeyVaultForTests(vault);
+    await setApiKey(KEY);
+    await addTask({ text: '지울 일' });
+    state.failRemove = true;
+    await expect(deleteAllData()).rejects.toThrow(/지우지 못했어요/);
+    expect(await listTasks()).toEqual([]);
+    expect(await fs.readdir(dataDir())).toEqual(['secrets.json']);
+  });
+
+  it('cannot remove an environment key, and the settings copy says so', async () => {
+    process.env.ANTHROPIC_API_KEY = 'sk-ant-from-env-0000';
+    try {
+      await deleteAllData();
+      expect(await getApiKey()).toBe('sk-ant-from-env-0000');
+    } finally {
+      delete process.env.ANTHROPIC_API_KEY;
+    }
+  });
 });
 
 /** 이 기기에 macOS, Linux가 없어 가짜 실행기로만 시험한다. 실제 도구의 동작은 확인하지 못했다. */
