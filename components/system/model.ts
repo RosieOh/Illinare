@@ -81,6 +81,9 @@ export function cpuSummary(history: Sample[]): { avg: number; max: number; label
 
 export type StatusTone = 'neutral' | 'warning' | 'danger';
 
+/** CPU를 "계속" 쓴다고 말하는 기준 시간 */
+const SUSTAINED_MS = 30_000;
+
 export function meterTone(pct: number): 'accent' | 'warning' | 'danger' {
   if (pct >= 92) return 'danger';
   if (pct >= 80) return 'warning';
@@ -89,7 +92,8 @@ export function meterTone(pct: number): 'accent' | 'warning' | 'danger' {
 
 /** 실제 측정값과 임계값으로만 만드는 상태 문장. 임계값을 넘지 않으면 극적인 말을 하지 않는다. */
 export function statusLine(snapshot: SystemSnapshot, history: Sample[]): { tone: StatusTone; text: string } {
-  const recent = history.slice(-15);
+  // 표본 수가 아니라 시간으로 자른다. 오늘 화면은 시스템 화면보다 드물게 측정한다.
+  const recent = history.filter((s) => s.at > snapshot.at - SUSTAINED_MS);
   const sustainedCpu = recent.length >= 5 ? recent.reduce((a, s) => a + s.cpu, 0) / recent.length : snapshot.cpuPct;
   const battery = snapshot.battery;
   if (snapshot.diskPct >= 95) {

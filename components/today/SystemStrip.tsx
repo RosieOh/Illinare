@@ -1,46 +1,15 @@
 'use client';
 
-import { statusLine } from '@/components/system/model';
-import { useEffect, useState } from 'react';
+import { statusLine, type Sample } from '@/components/system/model';
+import { useSystemMonitor } from '@/components/system/useSystemMonitor';
 import { Activity, ChevronRight, TriangleAlert } from 'lucide-react';
 import type { SystemSnapshot } from '@/lib/contracts';
-import { api } from '@/lib/client/api';
 
 const POLL_MS = 5000;
 
-function useSystem(active: boolean) {
-  const [snapshot, setSnapshot] = useState<SystemSnapshot | null>(null);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    if (!active) return;
-    const controller = new AbortController();
-    const load = () => {
-      if (document.hidden) return;
-      api
-        .get<SystemSnapshot>('/api/system', controller.signal)
-        .then((data) => {
-          setSnapshot(data);
-          setFailed(false);
-        })
-        .catch(() => {
-          if (!controller.signal.aborted) setFailed(true);
-        });
-    };
-    load();
-    const id = setInterval(load, POLL_MS);
-    return () => {
-      controller.abort();
-      clearInterval(id);
-    };
-  }, [active]);
-
-  return { snapshot, failed };
-}
-
 /** 숫자를 나열하기 전에 지금 상태를 한 문장으로 말한다. 시스템 화면과 같은 규칙을 쓴다. */
-function verdict(s: SystemSnapshot): { text: string; warn: boolean } {
-  const line = statusLine(s, []);
+function verdict(s: SystemSnapshot, history: Sample[]): { text: string; warn: boolean } {
+  const line = statusLine(s, history);
   return { text: line.text.replace(/\.$/, ''), warn: line.tone !== 'neutral' };
 }
 
@@ -54,9 +23,10 @@ function Metric({ label, value }: { label: string; value: string }) {
 }
 
 export function SystemStrip({ active, onOpen }: { active: boolean; onOpen: () => void }) {
-  const { snapshot, failed } = useSystem(active);
+  const { snapshot, history, error } = useSystemMonitor(active, POLL_MS);
+  const failed = error !== null;
 
-  const v = snapshot ? verdict(snapshot) : null;
+  const v = snapshot ? verdict(snapshot, history) : null;
   const Icon = v?.warn ? TriangleAlert : Activity;
 
   return (

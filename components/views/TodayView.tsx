@@ -105,7 +105,7 @@ export default function TodayView({ active }: ViewProps) {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <div className="max-md:hidden">
-            <TeamDroplets size={160} active={active} />
+            <TeamDroplets size={136} active={active} />
           </div>
           <FocusPill active={active} onOpen={openPlanner} />
           <Button icon={Sparkles} variant="secondary" loading={busyGoal === briefGoal && !!briefGoal} disabled={!today} onClick={() => void run(briefGoal)}>
@@ -138,12 +138,15 @@ export default function TodayView({ active }: ViewProps) {
 
         <RecentMissions recent={recent} now={minute * 60_000} className="material-thin rounded-[16px] p-2.5 @3xl:col-span-7" />
 
-        <RoutinesRow
-          active={active}
-          onRun={(goal) => void run(goal)}
-          busyGoal={busyGoal}
-          className={recent.length > 0 ? '@3xl:col-span-5' : '@3xl:col-span-12'}
-        />
+        {/* 첫날에는 시작 제안과 브리핑 버튼이 같은 일을 맡는다. 기본 창 크기에서 컴포저에 가리지 않게 뺀다. */}
+        {!isFirstDay && (
+          <RoutinesRow
+            active={active}
+            onRun={(goal) => void run(goal)}
+            busyGoal={busyGoal}
+            className={recent.length > 0 ? '@3xl:col-span-5' : '@3xl:col-span-12'}
+          />
+        )}
       </div>
 
       <EventSheet

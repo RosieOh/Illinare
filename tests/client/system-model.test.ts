@@ -97,11 +97,19 @@ describe('statusLine', () => {
   it('needs sustained CPU, not one spike', () => {
     expect(statusLine(snapshot({ cpuPct: 100 }), []).tone).toBe('neutral');
     const line = statusLine(
-      snapshot({ cpuPct: 97, processes: [{ pid: 1, name: 'node', cpuPct: 80, memMb: 10 }] }),
+      snapshot({ at: 30_000, cpuPct: 97, processes: [{ pid: 1, name: 'node', cpuPct: 80, memMb: 10 }] }),
       busy(15)
     );
     expect(line.tone).toBe('warning');
     expect(line.text).toContain('node');
+  });
+
+  it('measures sustained CPU by time, whatever the polling interval', () => {
+    const every5s: Sample[] = Array.from({ length: 7 }, (_, i) => ({ at: 100_000 + i * 5000, cpu: 97, rx: null, tx: null }));
+    const at = 130_000;
+    expect(statusLine(snapshot({ at, cpuPct: 97 }), every5s).text).toContain('CPU를 거의 다');
+    // 측정이 멈췄던 시간의 표본으로 "지금 계속 쓴다"고 말하지 않는다.
+    expect(statusLine(snapshot({ at: at + 60_000, cpuPct: 20 }), every5s).tone).toBe('neutral');
   });
 
   it('warns about a low battery only when not charging', () => {

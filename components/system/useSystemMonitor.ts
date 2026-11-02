@@ -15,8 +15,8 @@ export interface MonitorState {
 
 const INITIAL: MonitorState = { snapshot: null, history: [], error: null, lastOkAt: null };
 
-/** 화면에 보이는 동안에만 2초마다 측정값을 받는다. 숨은 탭에서는 쉰다. */
-export function useSystemMonitor(active: boolean) {
+/** 화면에 보이는 동안에만 일정 간격으로 측정값을 받는다. 숨은 탭에서는 쉰다. */
+export function useSystemMonitor(active: boolean, intervalMs = SAMPLE_INTERVAL_MS) {
   const [state, setState] = useState<MonitorState>(INITIAL);
   const [attempt, setAttempt] = useState(0);
 
@@ -27,7 +27,7 @@ export function useSystemMonitor(active: boolean) {
 
     const tick = async () => {
       if (document.hidden) {
-        timer = setTimeout(tick, SAMPLE_INTERVAL_MS);
+        timer = setTimeout(tick, intervalMs);
         return;
       }
       try {
@@ -43,7 +43,7 @@ export function useSystemMonitor(active: boolean) {
         const message = err instanceof ClientApiError ? err.message : '측정값을 받지 못했어요.';
         setState((cur) => ({ ...cur, error: message }));
       }
-      if (!controller.signal.aborted) timer = setTimeout(tick, SAMPLE_INTERVAL_MS);
+      if (!controller.signal.aborted) timer = setTimeout(tick, intervalMs);
     };
 
     void tick();
@@ -51,7 +51,7 @@ export function useSystemMonitor(active: boolean) {
       controller.abort();
       clearTimeout(timer);
     };
-  }, [active, attempt]);
+  }, [active, attempt, intervalMs]);
 
   const retry = useCallback(() => setAttempt((n) => n + 1), []);
   return { ...state, retry };
