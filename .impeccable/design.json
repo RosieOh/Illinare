@@ -1,0 +1,1448 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-02T03:46:52.248Z",
+  "title": "Design System: 일리네어 (Illionaire)",
+  "extensions": {
+    "colorMeta": {
+      "label": {
+        "role": "neutral",
+        "displayName": "라벨 1단",
+        "canonical": "rgba(0, 0, 0, 0.88)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "label-dark": {
+        "role": "neutral",
+        "displayName": "라벨 1단 (다크)",
+        "canonical": "rgba(255, 255, 255, 0.96)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "label-2": {
+        "role": "neutral",
+        "displayName": "라벨 2단",
+        "canonical": "rgba(40, 40, 48, 0.8)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#23232a",
+          "#3f3f47",
+          "#5c5d66",
+          "#7f7f89",
+          "#a3a4ad",
+          "#cacad0",
+          "#eeeef0"
+        ]
+      },
+      "label-2-dark": {
+        "role": "neutral",
+        "displayName": "라벨 2단 (다크)",
+        "canonical": "rgba(235, 235, 245, 0.8)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#232329",
+          "#3f3f47",
+          "#5d5d65",
+          "#7f7f88",
+          "#a4a4ac",
+          "#cacacf",
+          "#eeeef0"
+        ]
+      },
+      "label-3": {
+        "role": "neutral",
+        "displayName": "라벨 3단",
+        "canonical": "rgba(46, 46, 54, 0.76)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#23232a",
+          "#3f3f47",
+          "#5d5d66",
+          "#7f7f89",
+          "#a3a4ac",
+          "#cacad0",
+          "#eeeef0"
+        ]
+      },
+      "label-3-dark": {
+        "role": "neutral",
+        "displayName": "라벨 3단 (다크)",
+        "canonical": "rgba(235, 235, 245, 0.62)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#232329",
+          "#3f3f47",
+          "#5d5d65",
+          "#7f7f88",
+          "#a4a4ac",
+          "#cacacf",
+          "#eeeef0"
+        ]
+      },
+      "label-4": {
+        "role": "neutral",
+        "displayName": "라벨 4단",
+        "canonical": "rgba(60, 60, 67, 0.3)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#232329",
+          "#3f3f46",
+          "#5d5d64",
+          "#7f7f87",
+          "#a4a4ab",
+          "#cacacf",
+          "#eeeef0"
+        ]
+      },
+      "label-4-dark": {
+        "role": "neutral",
+        "displayName": "라벨 4단 (다크)",
+        "canonical": "rgba(235, 235, 245, 0.28)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#232329",
+          "#3f3f47",
+          "#5d5d65",
+          "#7f7f88",
+          "#a4a4ac",
+          "#cacacf",
+          "#eeeef0"
+        ]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "시스템 파랑",
+        "canonical": "#007aff",
+        "tonalRamp": [
+          "#000039",
+          "#000879",
+          "#002bae",
+          "#0052d4",
+          "#0079fe",
+          "#4da3ff",
+          "#98cdff",
+          "#def0ff"
+        ]
+      },
+      "accent-dark": {
+        "role": "primary",
+        "displayName": "시스템 파랑 (다크)",
+        "canonical": "#0a84ff",
+        "tonalRamp": [
+          "#000236",
+          "#001174",
+          "#0030a8",
+          "#0055cd",
+          "#007cf6",
+          "#4ca5ff",
+          "#98ceff",
+          "#dff0ff"
+        ]
+      },
+      "accent-fill": {
+        "role": "primary",
+        "displayName": "채움 파랑",
+        "canonical": "#0071e3",
+        "tonalRamp": [
+          "#000334",
+          "#00146f",
+          "#0033a2",
+          "#0057c7",
+          "#197df0",
+          "#56a5ff",
+          "#9ccdff",
+          "#e0f0ff"
+        ]
+      },
+      "accent-fill-dark": {
+        "role": "primary",
+        "displayName": "채움 파랑 (다크)",
+        "canonical": "#0a72e6",
+        "tonalRamp": [
+          "#000334",
+          "#001370",
+          "#0032a3",
+          "#0056c8",
+          "#1c7cf1",
+          "#57a4ff",
+          "#9dcdff",
+          "#e0f0ff"
+        ]
+      },
+      "accent-text": {
+        "role": "primary",
+        "displayName": "글자 파랑",
+        "canonical": "#0058b8",
+        "tonalRamp": [
+          "#00052f",
+          "#001a65",
+          "#003795",
+          "#0259b9",
+          "#347ee2",
+          "#64a6ff",
+          "#a4cdff",
+          "#e2f0ff"
+        ]
+      },
+      "accent-text-dark": {
+        "role": "primary",
+        "displayName": "글자 파랑 (다크)",
+        "canonical": "#63b3ff",
+        "tonalRamp": [
+          "#000a27",
+          "#002257",
+          "#004083",
+          "#0060a6",
+          "#3384cd",
+          "#65aaed",
+          "#a5cffa",
+          "#e2f0ff"
+        ]
+      },
+      "accent-tint": {
+        "role": "primary",
+        "displayName": "옅은 파랑",
+        "canonical": "rgba(0, 113, 227, 0.14)",
+        "tonalRamp": [
+          "#000334",
+          "#00146f",
+          "#0033a2",
+          "#0057c7",
+          "#197df0",
+          "#56a5ff",
+          "#9ccdff",
+          "#e0f0ff"
+        ]
+      },
+      "accent-tint-dark": {
+        "role": "primary",
+        "displayName": "옅은 파랑 (다크)",
+        "canonical": "rgba(10, 132, 255, 0.24)",
+        "tonalRamp": [
+          "#000236",
+          "#001174",
+          "#0030a8",
+          "#0055cd",
+          "#007cf6",
+          "#4ca5ff",
+          "#98ceff",
+          "#dff0ff"
+        ]
+      },
+      "on-accent": {
+        "role": "primary",
+        "displayName": "파랑 위 글자",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "warning": {
+        "role": "tertiary",
+        "displayName": "호박색",
+        "canonical": "#ff9500",
+        "tonalRamp": [
+          "#220000",
+          "#4f0000",
+          "#7a1400",
+          "#9e3b00",
+          "#c66100",
+          "#e88b21",
+          "#f8bd88",
+          "#ffead9"
+        ]
+      },
+      "warning-dark": {
+        "role": "tertiary",
+        "displayName": "호박색 (다크)",
+        "canonical": "#ff9f0a",
+        "tonalRamp": [
+          "#210000",
+          "#4c0200",
+          "#761d00",
+          "#994100",
+          "#c16600",
+          "#e28f1d",
+          "#f4bf87",
+          "#fdebd9"
+        ]
+      },
+      "warning-text": {
+        "role": "tertiary",
+        "displayName": "호박색 글자",
+        "canonical": "#a84a00",
+        "tonalRamp": [
+          "#210000",
+          "#4d0000",
+          "#761a00",
+          "#9a3d00",
+          "#c26127",
+          "#e48b5b",
+          "#f6bc9e",
+          "#feeae0"
+        ]
+      },
+      "warning-text-dark": {
+        "role": "tertiary",
+        "displayName": "호박색 글자 (다크)",
+        "canonical": "#ffb84d",
+        "tonalRamp": [
+          "#1c0300",
+          "#441200",
+          "#6a2c00",
+          "#8c4c00",
+          "#b27000",
+          "#d4973a",
+          "#eac390",
+          "#f9ecdc"
+        ]
+      },
+      "success": {
+        "role": "tertiary",
+        "displayName": "초록",
+        "canonical": "#34c759",
+        "tonalRamp": [
+          "#001400",
+          "#003500",
+          "#005600",
+          "#007700",
+          "#009d2e",
+          "#48c161",
+          "#9adea2",
+          "#e0f5e1"
+        ]
+      },
+      "success-dark": {
+        "role": "tertiary",
+        "displayName": "초록 (다크)",
+        "canonical": "#30d158",
+        "tonalRamp": [
+          "#001400",
+          "#003500",
+          "#005700",
+          "#007900",
+          "#009e21",
+          "#3ec25a",
+          "#97df9e",
+          "#dff6e0"
+        ]
+      },
+      "success-text": {
+        "role": "tertiary",
+        "displayName": "초록 글자",
+        "canonical": "#1a7f37",
+        "tonalRamp": [
+          "#001200",
+          "#003100",
+          "#005205",
+          "#00722a",
+          "#38964d",
+          "#6aba77",
+          "#a9d9ae",
+          "#e4f3e5"
+        ]
+      },
+      "success-text-dark": {
+        "role": "tertiary",
+        "displayName": "초록 글자 (다크)",
+        "canonical": "#4adf78",
+        "tonalRamp": [
+          "#001400",
+          "#003500",
+          "#005700",
+          "#00780b",
+          "#009d39",
+          "#42c168",
+          "#98dea6",
+          "#dff5e3"
+        ]
+      },
+      "danger": {
+        "role": "tertiary",
+        "displayName": "빨강",
+        "canonical": "#ff3b30",
+        "tonalRamp": [
+          "#2e0000",
+          "#640000",
+          "#960000",
+          "#bf0000",
+          "#eb201b",
+          "#ff6454",
+          "#ffa99a",
+          "#ffe5df"
+        ]
+      },
+      "danger-dark": {
+        "role": "tertiary",
+        "displayName": "빨강 (다크)",
+        "canonical": "#ff453a",
+        "tonalRamp": [
+          "#2d0000",
+          "#620000",
+          "#940000",
+          "#bc0000",
+          "#e82924",
+          "#ff6859",
+          "#ffab9d",
+          "#ffe5e0"
+        ]
+      },
+      "danger-fill": {
+        "role": "tertiary",
+        "displayName": "빨강 면",
+        "canonical": "#d70015",
+        "tonalRamp": [
+          "#2d0000",
+          "#630000",
+          "#940000",
+          "#bc0000",
+          "#e82728",
+          "#ff675b",
+          "#ffaa9e",
+          "#ffe5e0"
+        ]
+      },
+      "danger-fill-dark": {
+        "role": "tertiary",
+        "displayName": "빨강 면 (다크)",
+        "canonical": "#d9302a",
+        "tonalRamp": [
+          "#2a0000",
+          "#5e0000",
+          "#8e0000",
+          "#b50000",
+          "#e13931",
+          "#ff6f61",
+          "#ffaea1",
+          "#ffe6e1"
+        ]
+      },
+      "danger-text": {
+        "role": "tertiary",
+        "displayName": "빨강 글자",
+        "canonical": "#c4161c",
+        "tonalRamp": [
+          "#2a0000",
+          "#5e0000",
+          "#8d0000",
+          "#b50009",
+          "#e03a35",
+          "#ff7064",
+          "#ffaea3",
+          "#ffe6e1"
+        ]
+      },
+      "danger-text-dark": {
+        "role": "tertiary",
+        "displayName": "빨강 글자 (다크)",
+        "canonical": "#ff7a72",
+        "tonalRamp": [
+          "#250000",
+          "#540000",
+          "#810006",
+          "#a62729",
+          "#d0504b",
+          "#f27d75",
+          "#ffb4ac",
+          "#ffe7e4"
+        ]
+      },
+      "agent-conductor": {
+        "role": "secondary",
+        "displayName": "지휘자 파랑",
+        "canonical": "#007aff",
+        "tonalRamp": [
+          "#000039",
+          "#000879",
+          "#002bae",
+          "#0052d4",
+          "#0079fe",
+          "#4da3ff",
+          "#98cdff",
+          "#def0ff"
+        ]
+      },
+      "agent-conductor-dark": {
+        "role": "secondary",
+        "displayName": "지휘자 파랑 (다크)",
+        "canonical": "#0a84ff",
+        "tonalRamp": [
+          "#000236",
+          "#001174",
+          "#0030a8",
+          "#0055cd",
+          "#007cf6",
+          "#4ca5ff",
+          "#98ceff",
+          "#dff0ff"
+        ]
+      },
+      "agent-researcher": {
+        "role": "secondary",
+        "displayName": "리서처 민트",
+        "canonical": "#00b67a",
+        "tonalRamp": [
+          "#001402",
+          "#00340b",
+          "#005522",
+          "#00763f",
+          "#009b61",
+          "#43be88",
+          "#99dcb9",
+          "#dff5e8"
+        ]
+      },
+      "agent-researcher-dark": {
+        "role": "secondary",
+        "displayName": "리서처 민트 (다크)",
+        "canonical": "#2fdc92",
+        "tonalRamp": [
+          "#001400",
+          "#003502",
+          "#005717",
+          "#007836",
+          "#009d58",
+          "#30c181",
+          "#93deb4",
+          "#def5e7"
+        ]
+      },
+      "agent-archivist": {
+        "role": "secondary",
+        "displayName": "아키비스트 인디고",
+        "canonical": "#5a56e0",
+        "tonalRamp": [
+          "#090036",
+          "#1e0073",
+          "#3419a6",
+          "#4c43cc",
+          "#6a6af5",
+          "#8d95ff",
+          "#bac3ff",
+          "#e8edff"
+        ]
+      },
+      "agent-archivist-dark": {
+        "role": "secondary",
+        "displayName": "아키비스트 인디고 (다크)",
+        "canonical": "#7a78ff",
+        "tonalRamp": [
+          "#090034",
+          "#20006f",
+          "#361ca2",
+          "#4f44c7",
+          "#6e6af0",
+          "#9295ff",
+          "#bcc3ff",
+          "#e9edff"
+        ]
+      },
+      "agent-operator": {
+        "role": "secondary",
+        "displayName": "오퍼레이터 주황",
+        "canonical": "#f2661b",
+        "tonalRamp": [
+          "#270000",
+          "#590000",
+          "#870000",
+          "#ad2000",
+          "#d74d00",
+          "#f87c44",
+          "#ffb493",
+          "#ffe8dd"
+        ]
+      },
+      "agent-operator-dark": {
+        "role": "secondary",
+        "displayName": "오퍼레이터 주황 (다크)",
+        "canonical": "#ff7a2e",
+        "tonalRamp": [
+          "#260000",
+          "#570000",
+          "#840000",
+          "#a92800",
+          "#d35200",
+          "#f47f42",
+          "#ffb692",
+          "#ffe8dc"
+        ]
+      },
+      "agent-planner": {
+        "role": "secondary",
+        "displayName": "플래너 분홍",
+        "canonical": "#f0369c",
+        "tonalRamp": [
+          "#290010",
+          "#5c002c",
+          "#8c004b",
+          "#b3006a",
+          "#de1e8d",
+          "#ff61b1",
+          "#ffa6d2",
+          "#ffe3f1"
+        ]
+      },
+      "agent-planner-dark": {
+        "role": "secondary",
+        "displayName": "플래너 분홍 (다크)",
+        "canonical": "#ff5cb0",
+        "tonalRamp": [
+          "#270010",
+          "#58002d",
+          "#86004b",
+          "#ac006a",
+          "#d7338d",
+          "#f96ab1",
+          "#ffaad3",
+          "#ffe5f1"
+        ]
+      },
+      "agent-writer": {
+        "role": "secondary",
+        "displayName": "라이터 보라",
+        "canonical": "#a94fe2",
+        "tonalRamp": [
+          "#19002e",
+          "#3e0064",
+          "#620093",
+          "#8220b7",
+          "#a74de0",
+          "#c97cfe",
+          "#e2b4ff",
+          "#f6e8ff"
+        ]
+      },
+      "agent-writer-dark": {
+        "role": "secondary",
+        "displayName": "라이터 보라 (다크)",
+        "canonical": "#c26cf6",
+        "tonalRamp": [
+          "#19002b",
+          "#3e005f",
+          "#61008d",
+          "#8226b1",
+          "#a750d9",
+          "#c97ef8",
+          "#e2b5ff",
+          "#f7e8ff"
+        ]
+      },
+      "agent-analyst": {
+        "role": "secondary",
+        "displayName": "애널리스트 깊은 청록",
+        "canonical": "#0f8ea3",
+        "tonalRamp": [
+          "#001018",
+          "#002d3c",
+          "#004c60",
+          "#006b80",
+          "#138fa4",
+          "#59b3c6",
+          "#a1d5e1",
+          "#e1f2f6"
+        ]
+      },
+      "agent-analyst-dark": {
+        "role": "secondary",
+        "displayName": "애널리스트 깊은 청록 (다크)",
+        "canonical": "#2eaec4",
+        "tonalRamp": [
+          "#001019",
+          "#002d3e",
+          "#004d61",
+          "#006d81",
+          "#0091a6",
+          "#4fb5c8",
+          "#9cd6e2",
+          "#e0f2f6"
+        ]
+      },
+      "fill-1": {
+        "role": "neutral",
+        "displayName": "채우기 1단",
+        "canonical": "rgba(120, 120, 128, 0.2)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#232329",
+          "#3f3f46",
+          "#5d5d64",
+          "#7f7f87",
+          "#a4a4ab",
+          "#cacacf",
+          "#eeeef0"
+        ]
+      },
+      "fill-1-dark": {
+        "role": "neutral",
+        "displayName": "채우기 1단 (다크)",
+        "canonical": "rgba(120, 120, 128, 0.36)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#232329",
+          "#3f3f46",
+          "#5d5d64",
+          "#7f7f87",
+          "#a4a4ab",
+          "#cacacf",
+          "#eeeef0"
+        ]
+      },
+      "fill-2": {
+        "role": "neutral",
+        "displayName": "채우기 2단",
+        "canonical": "rgba(120, 120, 128, 0.16)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#232329",
+          "#3f3f46",
+          "#5d5d64",
+          "#7f7f87",
+          "#a4a4ab",
+          "#cacacf",
+          "#eeeef0"
+        ]
+      },
+      "fill-2-dark": {
+        "role": "neutral",
+        "displayName": "채우기 2단 (다크)",
+        "canonical": "rgba(120, 120, 128, 0.32)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#232329",
+          "#3f3f46",
+          "#5d5d64",
+          "#7f7f87",
+          "#a4a4ab",
+          "#cacacf",
+          "#eeeef0"
+        ]
+      },
+      "fill-3": {
+        "role": "neutral",
+        "displayName": "채우기 3단",
+        "canonical": "rgba(118, 118, 128, 0.12)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#23232a",
+          "#3f3f48",
+          "#5d5d66",
+          "#7f7f89",
+          "#a3a3ad",
+          "#cacad0",
+          "#eeeef0"
+        ]
+      },
+      "fill-3-dark": {
+        "role": "neutral",
+        "displayName": "채우기 3단 (다크)",
+        "canonical": "rgba(118, 118, 128, 0.24)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#23232a",
+          "#3f3f48",
+          "#5d5d66",
+          "#7f7f89",
+          "#a3a3ad",
+          "#cacad0",
+          "#eeeef0"
+        ]
+      },
+      "fill-4": {
+        "role": "neutral",
+        "displayName": "채우기 4단",
+        "canonical": "rgba(116, 116, 128, 0.08)",
+        "tonalRamp": [
+          "#0b0b0f",
+          "#23232b",
+          "#3f3e49",
+          "#5c5c68",
+          "#7f7f8b",
+          "#a3a3af",
+          "#cacad1",
+          "#eeeef1"
+        ]
+      },
+      "fill-4-dark": {
+        "role": "neutral",
+        "displayName": "채우기 4단 (다크)",
+        "canonical": "rgba(118, 118, 128, 0.18)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#23232a",
+          "#3f3f48",
+          "#5d5d66",
+          "#7f7f89",
+          "#a3a3ad",
+          "#cacad0",
+          "#eeeef0"
+        ]
+      },
+      "separator": {
+        "role": "neutral",
+        "displayName": "구분선",
+        "canonical": "rgba(60, 60, 67, 0.16)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#232329",
+          "#3f3f46",
+          "#5d5d64",
+          "#7f7f87",
+          "#a4a4ab",
+          "#cacacf",
+          "#eeeef0"
+        ]
+      },
+      "separator-dark": {
+        "role": "neutral",
+        "displayName": "구분선 (다크)",
+        "canonical": "rgba(235, 235, 245, 0.13)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#232329",
+          "#3f3f47",
+          "#5d5d65",
+          "#7f7f88",
+          "#a4a4ac",
+          "#cacacf",
+          "#eeeef0"
+        ]
+      },
+      "selected": {
+        "role": "neutral",
+        "displayName": "선택면",
+        "canonical": "rgba(255, 255, 255, 0.62)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "selected-dark": {
+        "role": "neutral",
+        "displayName": "선택면 (다크)",
+        "canonical": "rgba(255, 255, 255, 0.14)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "불투명 표면",
+        "canonical": "#f5f5f8",
+        "tonalRamp": [
+          "#0b0b0c",
+          "#242426",
+          "#3f3f42",
+          "#5d5d60",
+          "#808082",
+          "#a4a4a7",
+          "#cacacc",
+          "#eeeeef"
+        ]
+      },
+      "surface-dark": {
+        "role": "neutral",
+        "displayName": "불투명 표면 (다크)",
+        "canonical": "#1c1c1e",
+        "tonalRamp": [
+          "#0b0b0c",
+          "#242425",
+          "#3f3f42",
+          "#5d5d60",
+          "#808082",
+          "#a4a4a7",
+          "#cacacc",
+          "#eeeeef"
+        ]
+      },
+      "surface-2": {
+        "role": "neutral",
+        "displayName": "불투명 표면 2",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "surface-2-dark": {
+        "role": "neutral",
+        "displayName": "불투명 표면 2 (다크)",
+        "canonical": "#2c2c2e",
+        "tonalRamp": [
+          "#0b0b0c",
+          "#242425",
+          "#3f3f42",
+          "#5d5d60",
+          "#808082",
+          "#a4a4a6",
+          "#cacacc",
+          "#eeeeef"
+        ]
+      },
+      "scrim": {
+        "role": "neutral",
+        "displayName": "막",
+        "canonical": "rgba(20, 24, 34, 0.22)",
+        "tonalRamp": [
+          "#090b10",
+          "#20242d",
+          "#3b404b",
+          "#585d6a",
+          "#7b808d",
+          "#9fa4b1",
+          "#c7cad2",
+          "#edeef1"
+        ]
+      },
+      "scrim-dark": {
+        "role": "neutral",
+        "displayName": "막 (다크)",
+        "canonical": "rgba(0, 0, 0, 0.46)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "mat-thin": {
+        "role": "neutral",
+        "displayName": "머티리얼 thin",
+        "canonical": "rgba(255, 255, 255, 0.66)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "mat-thin-dark": {
+        "role": "neutral",
+        "displayName": "머티리얼 thin (다크)",
+        "canonical": "rgba(30, 30, 34, 0.72)",
+        "tonalRamp": [
+          "#0b0b0d",
+          "#242427",
+          "#3f3f44",
+          "#5d5d62",
+          "#808085",
+          "#a4a4a9",
+          "#cacacd",
+          "#eeeeef"
+        ]
+      },
+      "mat-regular": {
+        "role": "neutral",
+        "displayName": "머티리얼 regular",
+        "canonical": "rgba(255, 255, 255, 0.8)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "mat-regular-dark": {
+        "role": "neutral",
+        "displayName": "머티리얼 regular (다크)",
+        "canonical": "rgba(28, 28, 32, 0.84)",
+        "tonalRamp": [
+          "#0b0b0d",
+          "#242427",
+          "#3f3f44",
+          "#5d5d62",
+          "#808085",
+          "#a4a4a9",
+          "#cacacd",
+          "#eeeeef"
+        ]
+      },
+      "mat-thick": {
+        "role": "neutral",
+        "displayName": "머티리얼 thick",
+        "canonical": "rgba(250, 250, 253, 0.92)",
+        "tonalRamp": [
+          "#0b0b0c",
+          "#242426",
+          "#3f3f42",
+          "#5d5d60",
+          "#808082",
+          "#a4a4a7",
+          "#cacacc",
+          "#eeeeef"
+        ]
+      },
+      "mat-thick-dark": {
+        "role": "neutral",
+        "displayName": "머티리얼 thick (다크)",
+        "canonical": "rgba(24, 24, 28, 0.92)",
+        "tonalRamp": [
+          "#0b0b0d",
+          "#242427",
+          "#3f3f44",
+          "#5d5d62",
+          "#808085",
+          "#a4a4a9",
+          "#cacacd",
+          "#eeeeef"
+        ]
+      },
+      "lg-tint": {
+        "role": "neutral",
+        "displayName": "유리 틴트",
+        "canonical": "rgba(255, 255, 255, 0.36)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "lg-tint-dark": {
+        "role": "neutral",
+        "displayName": "유리 틴트 (다크)",
+        "canonical": "rgba(36, 36, 44, 0.42)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#23232a",
+          "#3f3f47",
+          "#5c5d66",
+          "#7f7f89",
+          "#a3a4ad",
+          "#cacad0",
+          "#eeeef0"
+        ]
+      },
+      "lg-tint-thick": {
+        "role": "neutral",
+        "displayName": "유리 틴트 thick",
+        "canonical": "rgba(255, 255, 255, 0.72)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "lg-tint-thick-dark": {
+        "role": "neutral",
+        "displayName": "유리 틴트 thick (다크)",
+        "canonical": "rgba(30, 30, 36, 0.78)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#232329",
+          "#3f3f46",
+          "#5d5d64",
+          "#7f7f87",
+          "#a4a4ab",
+          "#cacace",
+          "#eeeef0"
+        ]
+      },
+      "lg-tint-sheet": {
+        "role": "neutral",
+        "displayName": "유리 틴트 sheet",
+        "canonical": "rgba(255, 255, 255, 0.54)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "lg-tint-sheet-dark": {
+        "role": "neutral",
+        "displayName": "유리 틴트 sheet (다크)",
+        "canonical": "rgba(46, 46, 58, 0.52)",
+        "tonalRamp": [
+          "#0b0b10",
+          "#23232d",
+          "#3e3e4b",
+          "#5c5c6a",
+          "#7e7f8d",
+          "#a3a3b0",
+          "#c9cad2",
+          "#eeeef1"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "large-title": {
+        "displayName": "Large Title",
+        "purpose": "뷰의 머리글."
+      },
+      "title1": {
+        "displayName": "Title 1",
+        "purpose": "다음 일정과 날씨의 큰 값, 온보딩 제목, 좁은 화면의 뷰 머리글."
+      },
+      "title2": {
+        "displayName": "Title 2",
+        "purpose": "카드의 큰 제목과 읽는 칸의 미션 제목."
+      },
+      "title3": {
+        "displayName": "Title 3",
+        "purpose": "시트 제목과 구역 제목."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "카드 제목과 레일의 브랜드명."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "기본 본문. 답변은 줄 간격 1.7, 최대 폭 70ch."
+      },
+      "callout": {
+        "displayName": "Callout",
+        "purpose": "컨트롤의 기본 글자."
+      },
+      "subhead": {
+        "displayName": "Subhead",
+        "purpose": "보조 설명."
+      },
+      "footnote": {
+        "displayName": "Footnote",
+        "purpose": "배지와 스테이지 캡션."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "단축키 표시와 가장 작은 라벨."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "도구 입력, 경로, 다이프 같은 실제 기계 값."
+      }
+    },
+    "shadows": [
+      {
+        "name": "lg-shadow",
+        "value": "0 1px 3px rgba(20, 40, 80, 0.1), 0 14px 36px -10px rgba(20, 40, 80, 0.26)",
+        "purpose": "기능 계층의 기본 (라이트)."
+      },
+      {
+        "name": "lg-shadow-dark",
+        "value": "0 1px 3px rgba(0, 0, 0, 0.35), 0 16px 40px -10px rgba(0, 0, 0, 0.6)",
+        "purpose": "기능 계층의 기본 (다크)."
+      },
+      {
+        "name": "mat-shadow",
+        "value": "0 1px 2px rgba(25, 40, 80, 0.05), 0 10px 28px -12px rgba(25, 40, 80, 0.16)",
+        "purpose": "머티리얼 카드 (라이트)."
+      },
+      {
+        "name": "mat-shadow-dark",
+        "value": "0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -14px rgba(0, 0, 0, 0.6)",
+        "purpose": "머티리얼 카드 (다크)."
+      },
+      {
+        "name": "sheet-shadow",
+        "value": "0 2px 6px rgba(20, 30, 60, 0.08), 0 32px 80px -16px rgba(20, 30, 60, 0.36)",
+        "purpose": "시트와 답변 표면 (라이트)."
+      },
+      {
+        "name": "sheet-shadow-dark",
+        "value": "0 2px 8px rgba(0, 0, 0, 0.4), 0 36px 90px -16px rgba(0, 0, 0, 0.75)",
+        "purpose": "시트와 답변 표면 (다크)."
+      }
+    ],
+    "motion": [
+      {
+        "name": "spring-snappy",
+        "value": "spring stiffness 520, damping 38, mass 0.9",
+        "purpose": "선택 표시, 토글, 배지."
+      },
+      {
+        "name": "spring-morph",
+        "value": "spring stiffness 420, damping 36, mass 1",
+        "purpose": "아일랜드, 시트."
+      },
+      {
+        "name": "spring-gentle",
+        "value": "spring stiffness 380, damping 34, mass 1",
+        "purpose": "들어오는 콘텐츠, 스테이지 재배치."
+      },
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "일반 상태 전환."
+      },
+      {
+        "name": "ease-out-expo",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "스테이지 노드 이동 0.68초."
+      },
+      {
+        "name": "press",
+        "value": "0.26s cubic-bezier(0.3, 1.5, 0.5, 1)",
+        "purpose": "눌림의 튕김, scale 0.965."
+      },
+      {
+        "name": "liquid-bead",
+        "value": "950ms",
+        "purpose": "물방울 한 번이 관을 건너는 시간."
+      },
+      {
+        "name": "approval-arm",
+        "value": "700ms",
+        "purpose": "승인 버튼이 눌리기까지의 대기."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "stage-vertical",
+        "value": "560px"
+      },
+      {
+        "name": "diff-single-column",
+        "value": "600px"
+      },
+      {
+        "name": "tab-bar",
+        "value": "819px"
+      },
+      {
+        "name": "icon-rail",
+        "value": "1179px"
+      },
+      {
+        "name": "approval-beside",
+        "value": "1800px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "주 행동과 승인. 면 위의 옅은 흰빛과 안쪽 하이라이트가 있는 알약.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\">승인</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; height: 40px; padding: 0 16px; gap: 8px; border: 0; border-radius: 9999px; font-size: .875rem; line-height: 1.5; letter-spacing: -0.004em; font-weight: 550; white-space: nowrap; cursor: pointer; transition: transform .26s cubic-bezier(0.3,1.5,0.5,1), background-color .16s cubic-bezier(0.4,0,0.2,1), filter .16s cubic-bezier(0.4,0,0.2,1); color: var(--on-accent); background: linear-gradient(180deg, rgba(255,255,255,.1), transparent 55%), var(--accent-fill); box-shadow: 0 2px 8px rgba(0,50,140,.28), inset 0 1px 0 rgba(255,255,255,.4), inset 0 -1px 1px rgba(0,20,70,.18); } .ds-btn-primary:hover { filter: brightness(1.1); } .ds-btn-primary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; } .ds-btn-primary:active { transform: scale(.965); } .ds-btn-primary:disabled { opacity: .45; cursor: not-allowed; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "기본 변형. 거부처럼 나란히 놓이는 동등한 선택지.",
+      "html": "<button class=\"ds-btn-secondary\" type=\"button\">거부</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; height: 40px; padding: 0 16px; gap: 8px; border: 0; border-radius: 9999px; font-size: .875rem; line-height: 1.5; letter-spacing: -0.004em; font-weight: 550; white-space: nowrap; cursor: pointer; transition: transform .26s cubic-bezier(0.3,1.5,0.5,1), background-color .16s cubic-bezier(0.4,0,0.2,1), filter .16s cubic-bezier(0.4,0,0.2,1); color: var(--label); background: var(--fill-2); box-shadow: inset 0 0 0 .5px var(--separator); } .ds-btn-secondary:hover { background: var(--fill-1); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; } .ds-btn-secondary:active { transform: scale(.965); }"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "되돌리기 어려운 작업의 승인.",
+      "html": "<button class=\"ds-btn-danger\" type=\"button\">승인</button>",
+      "css": ".ds-btn-danger { display: inline-flex; align-items: center; justify-content: center; height: 40px; padding: 0 16px; gap: 8px; border: 0; border-radius: 9999px; font-size: .875rem; line-height: 1.5; letter-spacing: -0.004em; font-weight: 550; white-space: nowrap; cursor: pointer; transition: transform .26s cubic-bezier(0.3,1.5,0.5,1), background-color .16s cubic-bezier(0.4,0,0.2,1), filter .16s cubic-bezier(0.4,0,0.2,1); color: #fff; background: linear-gradient(180deg, rgba(255,255,255,.08), transparent 55%), var(--danger-fill); box-shadow: 0 2px 8px rgba(120,0,0,.28), inset 0 1px 0 rgba(255,255,255,.34), inset 0 -1px 1px rgba(70,0,0,.18); } .ds-btn-danger:hover { filter: brightness(1.1); } .ds-btn-danger:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; } .ds-btn-danger:active { transform: scale(.965); }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "유리와 머티리얼 안쪽의 입력. fill 바탕과 안쪽 헤어라인.",
+      "html": "<label class=\"ds-field\"><input class=\"ds-field-input\" placeholder=\"할 일 추가\" aria-label=\"할 일 추가\"></label>",
+      "css": ".ds-field { display: flex; align-items: center; height: 40px; padding: 0 12px; border-radius: 14px; background: var(--fill-3); box-shadow: inset 0 0 0 .5px var(--separator); transition: box-shadow .16s cubic-bezier(0.4,0,0.2,1), background-color .16s cubic-bezier(0.4,0,0.2,1); } .ds-field:hover { background: var(--fill-2); } .ds-field:focus-within { background: var(--fill-4); box-shadow: inset 0 0 0 1px var(--accent), 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); } .ds-field-input { flex: 1; min-width: 0; height: 100%; border: 0; outline: none; background: transparent; color: var(--label); font: inherit; font-size: .875rem; } .ds-field-input::placeholder { color: var(--label-3); opacity: 1; }"
+    },
+    {
+      "name": "Warning Badge",
+      "kind": "chip",
+      "refersTo": "badge-warning",
+      "description": "승인과 실제 주의 상태의 배지. 호박색은 여기까지만 내려온다.",
+      "html": "<span class=\"ds-badge-warning\">변경</span>",
+      "css": ".ds-badge-warning { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 9999px; font-size: .75rem; line-height: 1.4; font-weight: 500; white-space: nowrap; color: var(--warning-text); background: color-mix(in srgb, var(--warning) 20%, transparent); }"
+    },
+    {
+      "name": "Material Card",
+      "kind": "card",
+      "refersTo": "material-regular",
+      "description": "글을 읽는 콘텐츠 표면. 기본 등급.",
+      "html": "<section class=\"ds-material\"><h3 class=\"ds-material-title\">할 일</h3><p class=\"ds-material-body\">오늘 할 일을 적어 두면 여기에 모여요.</p></section>",
+      "css": ".ds-material { max-width: 340px; padding: 16px; border-radius: 20px; background: var(--mat-regular); -webkit-backdrop-filter: saturate(140%) blur(24px); backdrop-filter: saturate(140%) blur(24px); box-shadow: inset 0 0 0 .5px var(--mat-hairline), inset 0 .5px 0 var(--mat-edge), var(--mat-shadow); transition: filter .16s cubic-bezier(0.4,0,0.2,1); } .ds-material:hover { filter: brightness(1.03); } .ds-material-title { margin: 0; color: var(--label); font-size: 1rem; line-height: 1.45; font-weight: 600; letter-spacing: -0.01em; } .ds-material-body { margin: 6px 0 0; color: var(--label-2); font-size: .875rem; line-height: 1.5; }"
+    },
+    {
+      "name": "Rail Item",
+      "kind": "nav",
+      "refersTo": "rail",
+      "description": "떠 있는 유리 레일의 항목. 선택 표시는 selected 면이다. 데스크톱에서는 렌즈가 없다.",
+      "html": "<nav class=\"ds-rail\" aria-label=\"주 메뉴\"><a class=\"ds-rail-item\" href=\"#\" aria-current=\"page\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"19\" height=\"19\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2v2\"/><path d=\"M12 20v2\"/><path d=\"m4.93 4.93 1.41 1.41\"/><path d=\"m17.66 17.66 1.41 1.41\"/><path d=\"M2 12h2\"/><path d=\"M20 12h2\"/><path d=\"m6.34 17.66-1.41 1.41\"/><path d=\"m19.07 4.93-1.41 1.41\"/></svg><span>오늘</span></a><a class=\"ds-rail-item\" href=\"#\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"19\" height=\"19\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m10.586 5.414-5.172 5.172\"/><path d=\"m18.586 13.414-5.172 5.172\"/><path d=\"M6 12h12\"/><circle cx=\"12\" cy=\"20\" r=\"2\"/><circle cx=\"12\" cy=\"4\" r=\"2\"/><circle cx=\"20\" cy=\"12\" r=\"2\"/><circle cx=\"4\" cy=\"12\" r=\"2\"/></svg><span>미션</span></a></nav>",
+      "css": ".ds-rail { position: relative; border-radius: 26px; background: var(--lg-tint); -webkit-backdrop-filter: blur(12px) saturate(var(--lg-saturate)); backdrop-filter: blur(12px) saturate(var(--lg-saturate)); box-shadow: var(--lg-shadow), inset 0 1px 1px var(--lg-spec-top), inset 0 -1px 1px var(--lg-spec-bottom), inset 0 0 0 0.5px var(--lg-edge-b); } .ds-rail { display: flex; flex-direction: column; gap: 2px; width: 212px; padding: 8px; } .ds-rail-item { display: flex; align-items: center; gap: 12px; height: 42px; padding: 0 12px; border-radius: 18px; color: var(--label-2); font-size: .875rem; line-height: 1.5; font-weight: 500; text-decoration: none; transition: transform .26s cubic-bezier(0.3,1.5,0.5,1), background-color .16s cubic-bezier(0.4,0,0.2,1), filter .16s cubic-bezier(0.4,0,0.2,1); } .ds-rail-item:hover { background: var(--fill-4); color: var(--label); } .ds-rail-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; } .ds-rail-item:active { transform: scale(.965); } .ds-rail-item[aria-current] { color: var(--label); font-weight: 600; background: var(--selected); box-shadow: 0 1px 4px rgba(0,20,60,.12), inset 0 .5px 0 rgba(255,255,255,.4); } .ds-rail-item[aria-current] svg { color: var(--accent-text); }"
+    },
+    {
+      "name": "Composer",
+      "kind": "custom",
+      "refersTo": "composer",
+      "description": "주 행동. 렌즈가 또렷한 내용을 꺾는 표면이다. 렌즈는 SVG 변위 맵이 필요해 이 스니펫은 프로스트 재질만 보여 준다.",
+      "html": "<form class=\"ds-composer\" onsubmit=\"return false\"><button class=\"ds-composer-icon\" type=\"button\" aria-label=\"음성으로 입력하기\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 19v3\"/><path d=\"M19 10v2a7 7 0 0 1-14 0v-2\"/><rect x=\"9\" y=\"2\" width=\"6\" height=\"13\" rx=\"3\"/></svg></button><input class=\"ds-composer-input\" placeholder=\"무엇을 맡길까요?\" aria-label=\"새 미션 입력\"><button class=\"ds-composer-send\" type=\"submit\" aria-label=\"보내기\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"19\" height=\"19\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m5 12 7-7 7 7\"/><path d=\"M12 19V5\"/></svg></button></form>",
+      "css": ".ds-composer { position: relative; border-radius: 28px; background: var(--lg-tint); -webkit-backdrop-filter: blur(12px) saturate(var(--lg-saturate)); backdrop-filter: blur(12px) saturate(var(--lg-saturate)); box-shadow: var(--lg-shadow), inset 0 1px 1px var(--lg-spec-top), inset 0 -1px 1px var(--lg-spec-bottom), inset 0 0 0 0.5px var(--lg-edge-b); } .ds-composer { display: flex; align-items: center; gap: 4px; width: 100%; max-width: 760px; padding: 8px; } .ds-composer-icon, .ds-composer-send { display: flex; align-items: center; justify-content: center; flex: none; width: 40px; height: 40px; border: 0; border-radius: 9999px; cursor: pointer; transition: transform .26s cubic-bezier(0.3,1.5,0.5,1), background-color .16s cubic-bezier(0.4,0,0.2,1), filter .16s cubic-bezier(0.4,0,0.2,1); } .ds-composer-icon { background: transparent; color: var(--label-2); } .ds-composer-icon:hover { background: var(--fill-3); color: var(--label); } .ds-composer-send { background: var(--accent-fill); color: var(--on-accent); box-shadow: 0 2px 8px -2px rgba(0,80,200,.5), inset 0 .5px 0 rgba(255,255,255,.4); } .ds-composer-send:hover { filter: brightness(1.1); } .ds-composer-icon:focus-visible, .ds-composer-send:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; } .ds-composer-icon:active, .ds-composer-send:active { transform: scale(.9); } .ds-composer-input { flex: 1; min-width: 0; padding: 6px; border: 0; outline: none; background: transparent; color: var(--label); font: inherit; font-size: 1.0625rem; line-height: 1.45; letter-spacing: -0.012em; } .ds-composer-input::placeholder { color: var(--label-2); opacity: 1; }"
+    },
+    {
+      "name": "Approval Card",
+      "kind": "custom",
+      "refersTo": "approval-card",
+      "description": "렌즈 없는 thick 유리 한 장. 자동 포커스 없음. 승인 버튼은 뜬 뒤 700ms 동안 비활성이다.",
+      "html": "<section class=\"ds-approval\" role=\"group\" aria-label=\"승인 요청\"><div class=\"ds-approval-head\"><h3 class=\"ds-approval-title\">오퍼레이터의 작업을 승인할까요?</h3><span class=\"ds-approval-pill\">변경</span></div><p class=\"ds-approval-summary\">다운로드 폴더의 파일 12개를 옮겨요</p><div class=\"ds-approval-actions\"><button class=\"ds-approval-more\" type=\"button\">자세히</button><span class=\"ds-approval-gap\"></span><button class=\"ds-approval-deny\" type=\"button\">거부</button><button class=\"ds-approval-ok\" type=\"button\">승인</button></div></section>",
+      "css": ".ds-approval { position: relative; border-radius: 24px; background: var(--lg-tint-thick); -webkit-backdrop-filter: blur(28px) saturate(var(--lg-saturate)); backdrop-filter: blur(28px) saturate(var(--lg-saturate)); box-shadow: var(--lg-shadow), inset 0 1px 1px var(--lg-spec-top), inset 0 -1px 1px var(--lg-spec-bottom), inset 0 0 0 0.5px var(--lg-edge-b); } .ds-approval { max-width: 440px; padding: 16px; } .ds-approval-head { display: flex; align-items: center; gap: 8px; } .ds-approval-title { flex: 1; min-width: 0; margin: 0; color: var(--label); font-size: .875rem; line-height: 1.5; font-weight: 600; } .ds-approval-pill { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 9999px; font-size: .75rem; font-weight: 500; color: var(--warning-text); background: color-mix(in srgb, var(--warning) 20%, transparent); } .ds-approval-summary { margin: 6px 0 0; color: var(--label); font-size: .875rem; line-height: 1.5; } .ds-approval-actions { display: flex; align-items: center; gap: 8px; margin-top: 12px; } .ds-approval-gap { flex: 1; } .ds-approval-more, .ds-approval-deny, .ds-approval-ok { display: inline-flex; align-items: center; justify-content: center; height: 40px; padding: 0 16px; gap: 8px; border: 0; border-radius: 9999px; font-size: .875rem; line-height: 1.5; letter-spacing: -0.004em; font-weight: 550; white-space: nowrap; cursor: pointer; transition: transform .26s cubic-bezier(0.3,1.5,0.5,1), background-color .16s cubic-bezier(0.4,0,0.2,1), filter .16s cubic-bezier(0.4,0,0.2,1); } .ds-approval-more { height: 32px; padding: 0 12px; font-size: .8125rem; color: var(--accent-text); background: transparent; } .ds-approval-more:hover { background: var(--fill-3); } .ds-approval-deny { color: var(--label); background: var(--fill-2); box-shadow: inset 0 0 0 .5px var(--separator); } .ds-approval-deny:hover { background: var(--fill-1); } .ds-approval-ok { color: var(--on-accent); background: var(--accent-fill); } .ds-approval-ok:hover { filter: brightness(1.1); } .ds-approval-more:focus-visible, .ds-approval-deny:focus-visible, .ds-approval-ok:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; } .ds-approval-more:active, .ds-approval-deny:active, .ds-approval-ok:active { transform: scale(.965); }"
+    },
+    {
+      "name": "Glass Sphere, 상태별",
+      "kind": "custom",
+      "refersTo": "orb",
+      "description": "시그니처. 실제 액체는 LiquidLayer의 벡터 렌더러가 그리며, 이 스니펫은 마른 유리, 진행, 승인 대기의 수위와 테두리를 정적으로 보여 준다.",
+      "html": "<div class=\"ds-orbs\"><button class=\"ds-orb\" type=\"button\" style=\"--ds-tint: var(--agent-researcher)\" aria-label=\"리서처, 대기\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"23\" height=\"23\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20\"/><path d=\"M2 12h20\"/></svg></button><button class=\"ds-orb\" type=\"button\" style=\"--ds-tint: var(--agent-researcher)\" aria-label=\"리서처, 진행 중\"><span class=\"ds-orb-liquid\" style=\"height: 52%\"></span><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"23\" height=\"23\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20\"/><path d=\"M2 12h20\"/></svg></button><button class=\"ds-orb ds-orb-held\" type=\"button\" style=\"--ds-tint: var(--agent-researcher)\" aria-label=\"리서처, 승인 대기\"><span class=\"ds-orb-liquid\" style=\"height: 52%\"></span><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"23\" height=\"23\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20\"/><path d=\"M2 12h20\"/></svg></button><span class=\"ds-orb-badge\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2\"/><path d=\"M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2\"/><path d=\"M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8\"/><path d=\"M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15\"/></svg></span></div>",
+      "css": ".ds-orbs { display: flex; align-items: center; gap: 20px; } .ds-orb { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 72px; height: 72px; border-radius: 50%; overflow: hidden; color: color-mix(in srgb, var(--ds-tint) 62%, #090d1a); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ds-tint) 52%, rgba(28,40,72,.36)), inset 0 0 8px color-mix(in srgb, var(--ds-tint) 24%, transparent), inset 0 -3px 5px rgba(20,34,70,.2), 0 7px 17px -6px rgba(30,44,90,.26); transition: transform .28s cubic-bezier(0.3,1.4,0.5,1); } .ds-orb:hover { transform: scale(1.035); } .ds-orb:active { transform: scale(.97); } .ds-orb:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; } .ds-orb-liquid { position: absolute; left: 2%; right: 2%; bottom: 2%; border-radius: 0 0 50% 50% / 0 0 90% 90%; background: linear-gradient(180deg, color-mix(in srgb, var(--ds-tint) 88%, white), color-mix(in srgb, var(--ds-tint) 76%, black)); } .ds-orb > svg { position: relative; } .ds-orb-held { overflow: visible; box-shadow: inset 0 0 0 2px var(--warning), inset 0 -3px 5px rgba(20,34,70,.2), 0 0 0 4px color-mix(in srgb, var(--warning) 26%, transparent), 0 7px 17px -6px rgba(30,44,90,.26); } .ds-orb-badge { display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; margin-left: -34px; align-self: flex-end; border-radius: 50%; background: var(--warning); color: #3d2100; box-shadow: 0 0 0 1.5px var(--surface-2), 0 1px 3px rgba(0,0,0,.3); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "일이 흐르는 유리구",
+    "overview": "에이전트는 유리구이고 일은 그 안을 흐르는 액체다. 지휘자의 액체가 관을 따라 갈라져 나가면 위임이고, 결과 구로 모여들면 종합이다. 이 시스템에서 Liquid Glass의 분리와 병합은 장식이 아니라 실제 미션 상태를 옮긴 표기법이며, 화려함은 실제 작업 상태를 보여 줄 때에만 허락된다.\n\n화면은 세 층으로 쌓인다. 맨 아래에 생성형 메시 그라디언트 벽지, 그 위에 글을 읽는 머티리얼, 맨 위에 떠 있는 유리 컨트롤이다. Operate 모드이므로 표준 탐색과 컨트롤은 그대로 두고, 유리는 재질, 타입, 색, 밀도, 그리고 두 개의 시그니처 움직임(액체의 분리와 병합, 아일랜드 변형)으로만 기여한다. \"왼쪽 대화 목록과 가운데 채팅 칼럼\"이라는 AI 앱의 기본 배치는 쓰지 않는다.\n\n사용자가 지정한 세계는 Apple Liquid Glass다. 차분하고 정밀하며, 사용자가 언제든 멈출 수 있다는 감각이 먼저다. 밀도는 데스크톱 작업 도구 수준이고 본문은 한국어 해요체에 맞춘 짧은 문장을 전제로 한다. 이 언어는 PRODUCT.md와 surface 브리프에서 도출했으며 사용자 인터뷰를 거치지 않았다.",
+    "keyCharacteristics": [
+      "떠 있는 기능 계층(아일랜드, 레일, 컴포저)과 읽는 표면의 재질을 나눈다.",
+      "구의 수위, 움직임, 테두리는 단계 상태와 1:1로 대응한다.",
+      "호박색은 승인과 실제 주의 상태의 색이다.",
+      "숫자는 전부 tabular이고, 표시되는 값은 전부 실제 데이터다.",
+      "라이트와 다크 토큰을 짝으로 두며, 투명도와 모션을 줄이는 폴백을 갖는다."
+    ],
+    "rules": [
+      {
+        "name": "The Amber Attention Rule",
+        "body": "호박색은 승인과 실제 주의 상태에만 쓴다. 미팅, 맑은 날씨, 데모 표시는 호박색이 아니다. 데모 배지는 중립 톤이다.",
+        "section": "colors"
+      },
+      {
+        "name": "The Agent Liquid Rule",
+        "body": "에이전트 색은 그 에이전트의 액체를 뜻한다. 결과 구에서는 끝난 단계의 색을 `accent`에 12%씩 섞어 끝난 순서대로 쌓는다. 합쳐진 뒤에는 한 액체이므로 기여한 색은 옅은 결로만 남는다. 답변 표면의 위쪽 테두리가 같은 색을 이어받는다.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Truth Rule",
+        "body": "숫자는 앱 전체에서 tabular다(`font-variant-numeric: tabular-nums`). 비용, 경과 시간, 진행 수치가 바뀌어도 폭이 흔들리지 않아야 한다.",
+        "section": "typography"
+      },
+      {
+        "name": "The Korean Wrap Rule",
+        "body": "단어 중간에서 줄을 끊지 않는다(`word-break: keep-all`, `overflow-wrap: anywhere`). 한글 조합 중의 Enter는 조합 확정일 뿐 전송이 아니다.",
+        "section": "typography"
+      },
+      {
+        "name": "The Two Tiers Rule",
+        "body": "떠 있는 컨트롤은 유리, 읽는 글은 충분히 불투명한 표면이다. 새 표면을 만들면 먼저 이 둘 중 어디인지 정한다.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Reading Surface Rule",
+        "body": "읽는 표면에는 굴절을 쓰지 않는다. 승인 카드, 펼친 아일랜드, 기본 시트는 렌즈가 없다. 글이 짧은 두 시트(명령 찾기, 온보딩)만 `glass=\"clear\"`로 예외다.",
+        "section": "elevation"
+      },
+      {
+        "name": "The No Stacked Glass Rule",
+        "body": "유리 표면 안에 유리나 머티리얼 컴포넌트를 넣지 않는다. 안쪽 표면은 `fill` 토큰을 쓴다. 카드 안에 카드도 넣지 않는다.",
+        "section": "elevation"
+      },
+      {
+        "name": "The One Glass Group Rule",
+        "body": "나란히 놓이는 컨트롤은 떨어진 유리 여러 장이 아니라 유리 한 장 안에 묶는다(미션 도구, 발표 도구, 컴포저). 그래서 화면에 맞닿는 유리 표면이 없고, 두 유리가 합쳐지는 변형도 쓰지 않는다.",
+        "section": "elevation"
+      },
+      {
+        "name": "The One-to-One Sphere Rule",
+        "body": "구의 모습은 실제 상태에서만 나온다. 쉬는 에이전트에 액체를 담지 않고, 상태 없는 움직임을 더하지 않는다. 새 상태를 추가하면 수위, 움직임, 테두리, 필라멘트를 함께 정한다.",
+        "section": "components"
+      },
+      {
+        "name": "The Deliberate Hand Rule",
+        "body": "승인 버튼에 기본 포커스를 주지 않고 전역 Enter 단축키도 두지 않아, 다른 곳에서 치던 Enter가 승인으로 이어지지 않는다. 승인 버튼은 카드가 뜨거나 바뀐 뒤 700ms 동안 비활성이다. 제스처는 `data-approval-ui` 안의 모든 요소(거부 포함)와 승인을 뜻하는 이름의 요소를 누르지 못하고 \"승인은 직접 눌러 주세요\"라고 알린다.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do 새 표면을 만들 때 먼저 떠 있는 컨트롤인지 읽는 표면인지 정한다. 전자는 `LiquidGlass`, 후자는 `Material`이거나 렌즈를 끈 `thick`이다.",
+      "Do 유리 안쪽 표면에는 `fill-1`부터 `fill-4`와 `accent-tint`를 쓴다.",
+      "Do 구의 수위와 움직임을 실제 단계 상태와 도구 호출에서 파생한다.",
+      "Do 호박색은 승인 대기, 외부 데이터 오염, 시간 겹침, 자원 경고처럼 사용자가 실제로 봐야 하는 곳에 쓴다.",
+      "Do 동심 코너를 지킨다: 안쪽 radius는 바깥 radius에서 패딩을 뺀 값이다.",
+      "Do 움직임은 `spring.snappy`, `spring.morph`, `spring.gentle`에서 고른다. 새 스프링 값을 만들지 않는다.",
+      "Do 라이트와 다크 토큰을 짝으로 추가하고, 투명도 줄이기와 모션 줄이기에서 어떻게 보일지 함께 정한다.",
+      "Do 데이터가 없으면 빈 상태를 보여 주고, 예시 데이터에는 예시라고 적는다."
+    ],
+    "donts": [
+      "Don't 그라디언트 텍스트를 쓰지 않는다.",
+      "Don't 제목 위에 에이브로나 키커 라벨을 얹지 않는다.",
+      "Don't 대시보드와 요약을 같은 크기 카드 그리드로 채우지 않는다. 오늘 화면의 위계 있는 벤토가 기준이다. 발표 자료 썸네일이나 배경화면 선택처럼 같은 종류를 고르는 목록만 균등 격자를 쓴다.",
+      "Don't 네온 글로우를 쓰지 않는다. 색 있는 빛은 액체가 구 아래와 완료된 결과 구 둘레에 남기는 옅은 빛까지다.",
+      "Don't 이모지를 아이콘으로 쓰지 않는다. 아이콘은 Lucide 선 아이콘과 브랜드 표식이다.",
+      "Don't 색 있는 `border-left`로 강조하지 않는다. 슬라이드 수치나 인용문의 중립 구분선은 예외가 아니라 강조가 아닌 구분이다.",
+      "Don't 가짜 지표, 가짜 보안 등급, 지어낸 수치를 두지 않는다.",
+      "Don't 레이더, 홀로그램, 터미널 부팅 로그 같은 SF 연출을 쓰지 않는다. 모노 글꼴은 도구 입력, 경로, 다이프 같은 실제 값에만 쓴다.",
+      "Don't Apple 로고나 SF Pro 글꼴 파일을 넣지 않는다. 글꼴은 Pretendard를 번들하고 시스템 글꼴은 대체 순서로만 부른다.",
+      "Don't 호박색을 미팅, 맑은 날씨, 데모 표시, 장식에 쓰지 않는다.",
+      "Don't 승인 카드, 펼친 아일랜드, 글을 읽는 시트에 굴절을 켜지 않는다.",
+      "Don't 위 표에 없는 표면에 렌즈를 켜지 않는다. 떠 있는 컨트롤 셋과 스테이지의 큰 구까지가 프레임 예산이다.",
+      "Don't 유리 위에 유리를 쌓지 않는다.",
+      "Don't Enter 키나 손 제스처로 승인되는 경로를 만들지 않는다. 승인 버튼에 자동 포커스나 전역 단축키를 주지 않고, 제스처 차단을 우회하지 않는다.",
+      "Don't 쉬고 있는 에이전트에 액체를 담거나, 일이 없는데 움직임을 넣지 않는다."
+    ]
+  }
+}

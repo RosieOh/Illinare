@@ -70,7 +70,15 @@ npm run typecheck
 npm run lint
 ```
 
-이 저장소의 Next.js는 학습 데이터와 다를 수 있습니다. 코드를 쓰기 전에 `node_modules/next/dist/docs/`를 확인하세요. 시각 방향은 [.impeccable/surfaces/app-page-tsx.md](.impeccable/surfaces/app-page-tsx.md), 제품 원칙은 [PRODUCT.md](PRODUCT.md), 보안 모델은 [SECURITY.md](SECURITY.md)에 있습니다.
+실제 Claude API로 미션을 끝까지 돌려 보려면 빌드한 뒤 `live-check`를 씁니다. 실제 비용이 나가므로 `--yes`가 없으면 시작하지 않습니다. 앱 데이터는 임시 폴더를 쓰고, 쓰기 점검은 문서 폴더에 파일 하나를 만들었다가 되돌리기로 지웁니다.
+
+```bash
+npm run build
+ANTHROPIC_API_KEY=... npm run live-check -- --yes   # 답변, 웹, 코드 실행, 첨부, 쓰기 승인, 오염 승인, 비용
+npm run live-check -- --demo                        # 키 없이 스크립트만 점검
+```
+
+이 저장소의 Next.js는 학습 데이터와 다를 수 있습니다. 코드를 쓰기 전에 `node_modules/next/dist/docs/`를 확인하세요. 디자인 시스템은 [DESIGN.md](DESIGN.md), 시각 방향은 [.impeccable/surfaces/app-page-tsx.md](.impeccable/surfaces/app-page-tsx.md), 제품 원칙은 [PRODUCT.md](PRODUCT.md), 보안 모델은 [SECURITY.md](SECURITY.md)에 있습니다.
 
 ## 이름 바꾸기
 
