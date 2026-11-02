@@ -1,10 +1,14 @@
 import { promises as fs } from 'node:fs';
-import { join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { getPlatform } from '@/lib/platform';
 import { getSettings } from '@/lib/store/settings';
-import { desktopDir } from './paths';
+import { desktopDir, safeWritePath } from './paths';
 import { register } from './registry';
 import { fetchWeather, isPlausibleCity } from './weather';
+
+function screenshotFile(filename: string): string {
+  return join(desktopDir(), 'illionaire-screenshots', `${filename.replace(/[^\w\-가-힣 ]/g, '_')}.png`);
+}
 
 // ─── 시간 ─────────────────────────────────────────────────
 register<{ timezone?: string }>({
@@ -74,6 +78,7 @@ register<{ filename?: string }>({
   group: 'apps',
   agents: ['operator'],
   available: () => getPlatform().has('screenshot'),
+  targetPath: ({ filename }) => screenshotFile(filename ?? `shot-${Date.now()}`),
   schema: {
     type: 'object',
     properties: { filename: { type: 'string', maxLength: 80, description: '확장자 없는 파일명. 생략하면 시각으로 정합니다.' } },
@@ -81,12 +86,12 @@ register<{ filename?: string }>({
   },
   summarize: ({ filename }) => `화면 캡처${filename ? `: ${filename}` : ''}`,
   async run({ filename }, ctx) {
-    const dir = join(desktopDir(), 'illionaire-screenshots');
-    await fs.mkdir(dir, { recursive: true });
-    const name = (filename ?? `shot-${Date.now()}`).replace(/[^\w\-가-힣 ]/g, '_');
-    const file = join(dir, `${name}.png`);
+    // 다른 쓰기 도구와 같은 규칙을 거친다. 이 폴더가 정션이거나 이미 있는 파일이 하드 링크면 밖으로 쓰게 된다.
+    const file = safeWritePath(screenshotFile(filename ?? `shot-${Date.now()}`));
+    await fs.mkdir(dirname(file), { recursive: true });
     await getPlatform().screenshot(file);
-    ctx.emitArtifact?.({ kind: 'file', id: file, title: `${name}.png`, ref: file });
+    const title = basename(file);
+    ctx.emitArtifact?.({ kind: 'file', id: file, title, ref: file });
     return `스크린샷을 저장했습니다: ${file}`;
   },
 });

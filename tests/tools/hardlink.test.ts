@@ -1,4 +1,4 @@
-import { linkSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, linkSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -140,6 +140,41 @@ describe('hard links', () => {
       expect(isHardLink('~/Documents/pair.txt')).toBe(true);
       rmSync(docs('pair-link.txt'));
       expect(isHardLink('~/Documents/pair.txt')).toBe(false);
+    });
+
+    describe('take_screenshot, which builds its own path', () => {
+      const shots = () => path.join(home, 'Desktop', 'illionaire-screenshots');
+
+      beforeAll(() => mkdirSync(shots(), { recursive: true }));
+
+      // 거부되는 경우만 실행한다. 통과하면 이 기기의 화면을 실제로 캡처한다.
+      it('cannot overwrite a protected file through a link', async () => {
+        const key = path.join(home, '.ssh', 'id_rsa');
+        writeFileSync(key, 'PRIVATE-KEY-BODY');
+        linkSync(key, path.join(shots(), 'evidence.png'));
+        const res = await executeTool('take_screenshot', { filename: 'evidence' }, {}, meta);
+        expect(res.status).toBe('error');
+        expect(res.content).toContain('하드 링크');
+        expect(readFileSync(key, 'utf8')).toBe('PRIVATE-KEY-BODY');
+      });
+
+      it('asks before writing over any other link, even under always allow', () => {
+        linkSync(docs('single.txt'), path.join(shots(), 'plain.png'));
+        const tool = getTool('take_screenshot')!;
+        expect(gate(tool, { settings: allowAll('take_screenshot'), tainted: false, input: { filename: 'plain' } }).action).toBe('ask');
+        expect(tool.summarize({ filename: 'plain' })).toContain('하드 링크');
+        expect(gate(tool, { settings: allowAll('take_screenshot'), tainted: false, input: { filename: 'fresh' } }).action).toBe('run');
+      });
+
+      it('cannot follow a junction out of the allowed folders', async () => {
+        rmSync(shots(), { recursive: true, force: true });
+        symlinkSync(path.join(home, '.ssh'), shots(), 'junction');
+        const res = await executeTool('take_screenshot', { filename: 'through-junction' }, {}, meta);
+        expect(res.status).toBe('error');
+        expect(existsSync(path.join(home, '.ssh', 'through-junction.png'))).toBe(false);
+        rmSync(shots());
+        mkdirSync(shots(), { recursive: true });
+      });
     });
 
     it('sees through a note saved under a linked name', () => {
