@@ -1,22 +1,22 @@
-export function speakKorean(text: string) {
-  if (typeof window === 'undefined') return;
+/** 브라우저 내장 TTS. 한국어 음성이 있으면 우선 사용한다. */
+export function speak(text: string, lang = 'ko-KR') {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
   window.speechSynthesis.cancel();
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.lang = 'ko-KR';
-  utter.rate = 0.88;
-  utter.pitch = 0.75;
-  utter.volume = 1;
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = lang;
+  utterance.rate = 1.02;
 
-  const speak = () => {
+  const start = () => {
     const voices = window.speechSynthesis.getVoices();
-    const korean = voices.find(v => v.lang.startsWith('ko'));
-    if (korean) utter.voice = korean;
-    window.speechSynthesis.speak(utter);
+    const match = voices.find((v) => v.lang === lang) ?? voices.find((v) => v.lang.startsWith(lang.slice(0, 2)));
+    if (match) utterance.voice = match;
+    window.speechSynthesis.speak(utterance);
   };
 
-  if (window.speechSynthesis.getVoices().length > 0) {
-    speak();
-  } else {
-    window.speechSynthesis.addEventListener('voiceschanged', speak, { once: true });
-  }
+  if (window.speechSynthesis.getVoices().length > 0) start();
+  else window.speechSynthesis.addEventListener('voiceschanged', start, { once: true });
+}
+
+export function stopSpeaking() {
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
 }
