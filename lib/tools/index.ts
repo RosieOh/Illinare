@@ -1,8 +1,10 @@
-// 모든 도구를 등록 — 단순 import만 해도 register() 부수효과로 등록됨
+// import 하는 것만으로 모든 도구가 등록된다.
 import './system';
 import './apps';
 import './files';
 import './data';
+import './planner';
+import './docs';
+import './memory';
 
-export { listTools, getTool, asAnthropicTools } from './registry';
-export type { ToolDef, ToolRisk } from './registry';
+export * from './registry';
