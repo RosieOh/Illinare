@@ -12,6 +12,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
+    "live-check": "node scripts/live-check.mjs",
     "desktop:dev": "node scripts/desktop-dev.mjs",
     "desktop:prepare": "node scripts/desktop-prepare.mjs",
     "desktop:pack": "next build && node scripts/desktop-prepare.mjs && electron-builder --dir",
