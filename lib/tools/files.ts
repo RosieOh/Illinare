@@ -66,10 +66,12 @@ async function previewOf(path: string): Promise<string | null> {
   }
 }
 
-function clip(text: string): { text: string; truncated: boolean } {
-  return text.length > PREVIEW_LIMIT
-    ? { text: `${text.slice(0, PREVIEW_LIMIT)}\n…(잘림)`, truncated: true }
-    : { text, truncated: false };
+/** 위험한 내용은 긴 글 끝에 숨기 쉬우므로 넘치면 앞과 뒤를 함께 보여 준다. */
+export function clip(text: string): { text: string; truncated: boolean } {
+  if (text.length <= PREVIEW_LIMIT) return { text, truncated: false };
+  const tail = Math.floor(PREVIEW_LIMIT / 4);
+  const omitted = text.length - PREVIEW_LIMIT;
+  return { text: `${text.slice(0, PREVIEW_LIMIT - tail)}\n…(가운데 ${omitted.toLocaleString()}자 생략)…\n${text.slice(-tail)}`, truncated: true };
 }
 
 /**

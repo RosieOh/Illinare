@@ -6,6 +6,7 @@ import { DEFAULT_SETTINGS, type Settings, type ToolPolicy } from '@/lib/contract
 import { hasUntrustedMemory } from '@/lib/store/memory';
 import { displayPreview, displaySummary, escapeInvisible, hasInvisibleChars, headAndTail, redactPreviewForStorage } from '@/lib/tools/display';
 import { executeTool, undoAudit } from '@/lib/tools/execute';
+import { PREVIEW_LIMIT } from '@/lib/tools/files';
 import { getTool } from '@/lib/tools';
 import { effectiveRisk, gate } from '@/lib/tools/policy';
 
@@ -170,6 +171,30 @@ describe('승인 카드의 내용이 실제 실행과 같다', () => {
     expect(tool.summarize({ text })).toContain('iex"');
     const preview = await tool.preview!({ text });
     expect(preview).toMatchObject({ kind: 'text', text, truncated: false });
+  });
+
+  it('음성 출력은 요약이 가운데를 줄여도 미리보기에 전문이 있다', async () => {
+    const text = `앞부분 ${'가'.repeat(200)} 숨은 문장 ${'나'.repeat(150)} 끝부분`;
+    const preview = await getTool('say_text')!.preview!({ text });
+    expect(preview).toMatchObject({ kind: 'text', text, truncated: false });
+  });
+
+  it('아주 긴 쓰기의 미리보기는 끝을 숨기지 않고 잘렸다고 알린다', async () => {
+    const content = `${'앞'.repeat(PREVIEW_LIMIT)}\n맨 끝의 위험한 명령`;
+    const written = await getTool('write_file')!.preview!({ path: '~/Documents/long.txt', content });
+    expect(written?.truncated).toBe(true);
+    expect(written?.after).toContain('맨 끝의 위험한 명령');
+    expect(written?.after).toContain('생략');
+    const note = await getTool('save_note')!.preview!({ name: 'n', content });
+    expect(note?.truncated).toBe(true);
+    expect(note?.text).toContain('맨 끝의 위험한 명령');
+  });
+
+  it('화면 캡처 요약은 입력 그대로가 아니라 실제로 저장될 자리를 보여준다', () => {
+    const shown = summarize('take_screenshot', { filename: 'a/../b' });
+    expect(shown).toContain('illionaire-screenshots');
+    expect(shown).toContain('a____b.png');
+    expect(summarize('take_screenshot', {})).toContain('illionaire-screenshots');
   });
 
   it('알림 요약은 본문까지 보여준다', () => {

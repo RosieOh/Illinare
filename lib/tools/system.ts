@@ -155,6 +155,10 @@ register<{ text: string; voice?: string }>({
   },
   summarize: ({ text }) => `음성 출력 (${text.length}자): "${headAndTail(text, 40, 40)}"`,
   recordSummary: ({ text }) => `음성 출력 (${text.length}자)`,
+  // 요약은 가운데를 줄이므로 무엇을 말할지 끝까지 볼 수 있게 한다.
+  async preview({ text }) {
+    return { kind: 'text', text, truncated: false };
+  },
   async run(input) {
     await getPlatform().say(input);
     return '음성 출력을 마쳤습니다';

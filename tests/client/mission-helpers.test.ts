@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { collapseUnchanged, lineDiff } from '@/components/mission/diff';
+import { capRows, collapseUnchanged, lineDiff } from '@/components/mission/diff';
 import { ANSWER_NODE, CONDUCTOR_NODE } from '@/components/mission/layout';
 import { answerStatus, conductorStatus, edgeState, effectiveMissionStatus, stepCaption, visibleReason } from '@/components/mission/status';
 import type { MissionView, StepStatus, StepView } from '@/lib/contracts';
@@ -114,6 +114,21 @@ describe('visibleReason', () => {
   it('keeps unrelated reasons', () => {
     expect(visibleReason({ tainted: true, reason: '새 파일을 만들어요.' })).toBe('새 파일을 만들어요.');
     expect(visibleReason({ reason: '외부 데이터를 읽어요.' })).toBe('외부 데이터를 읽어요.');
+  });
+});
+
+describe('capRows', () => {
+  it('leaves ordinary diffs alone', () => {
+    expect(capRows([1, 2, 3], 10)).toEqual([1, 2, 3]);
+  });
+
+  it('keeps the head and the tail of a huge diff and says how much it hid', () => {
+    const rows = Array.from({ length: 100 }, (_, i) => i);
+    const capped = capRows(rows, 20);
+    expect(capped).toHaveLength(21);
+    expect(capped[0]).toBe(0);
+    expect(capped[capped.length - 1]).toBe(99);
+    expect(capped).toContainEqual({ hidden: 80 });
   });
 });
 

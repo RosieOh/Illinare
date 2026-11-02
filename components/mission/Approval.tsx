@@ -6,7 +6,7 @@ import { AGENTS, type ApprovalDecision, type ApprovalPreview, type ApprovalReque
 import { AgentAvatar, Badge, Button, LiquidGlass, Sheet, useToast } from '@/components/glass';
 import { useMissions } from '@/context/MissionsContext';
 import { ClientApiError } from '@/lib/client/api';
-import { collapseUnchanged, lineDiff, type DiffCell } from './diff';
+import { capRows, collapseUnchanged, lineDiff, type DiffCell } from './diff';
 import { closeApprovalDetails } from './selection';
 import { TAINT_WARNING, visibleReason } from './status';
 import { useApprovalArmed } from './useApprovalArmed';
@@ -78,6 +78,7 @@ export function ApprovalFloat({
         </div>
         <p className="mt-1.5 text-callout break-all text-label">{approval.summary}</p>
         {reason && <p className="mt-0.5 text-subhead text-label-2">{reason}</p>}
+        {approval.preview?.truncated && <p className="mt-0.5 text-subhead text-label-2">내용이 길어 일부만 미리 볼 수 있어요. 자세히에서 앞과 뒤를 확인해 주세요.</p>}
         {approval.tainted && (
           <p className="mt-1.5 flex items-start gap-1.5 text-subhead text-warning-text">
             <TriangleAlert size={14} className="mt-[3px] shrink-0" aria-hidden="true" />
@@ -141,8 +142,12 @@ function DiffView({ before, after }: { before: string; after: string }) {
             변경 후
           </span>
         </div>
-        {rows.map((row, i) =>
-          row ? (
+        {capRows(rows).map((row, i) =>
+          row && 'hidden' in row ? (
+            <div key={i} className="diff-fold text-footnote" role="row">
+              가운데 {row.hidden.toLocaleString()}줄은 너무 길어 그리지 않았어요
+            </div>
+          ) : row ? (
             <div key={i} className="diff-row" role="row">
               <DiffSide cell={row.left} side="left" />
               <DiffSide cell={row.right} side="right" />
@@ -169,7 +174,7 @@ function PreviewBlock({ preview }: { preview: ApprovalPreview }) {
           {preview.text ?? ''}
         </pre>
       )}
-      {preview.truncated && <p className="mt-1.5 text-footnote text-label-2">내용이 길어 앞부분만 보여줘요. 실제 작업은 전체 내용에 적용돼요.</p>}
+      {preview.truncated && <p className="mt-1.5 text-footnote text-label-2">내용이 길어 앞과 뒤만 보여줘요. 실제 작업은 전체 내용에 적용돼요.</p>}
     </div>
   );
 }

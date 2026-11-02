@@ -2,6 +2,7 @@ import { promises as fs } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { getPlatform } from '@/lib/platform';
 import { getSettings } from '@/lib/store/settings';
+import { writeWithJournal } from './files';
 import { desktopDir, safeWritePath } from './paths';
 import { register } from './registry';
 import { fetchWeather, isPlausibleCity } from './weather';
@@ -84,14 +85,21 @@ register<{ filename?: string }>({
     properties: { filename: { type: 'string', maxLength: 80, description: '확장자 없는 파일명. 생략하면 시각으로 정합니다.' } },
     additionalProperties: false,
   },
-  summarize: ({ filename }) => `화면 캡처${filename ? `: ${filename}` : ''}`,
+  // 입력 그대로가 아니라 실제로 저장될 자리를 보여 준다.
+  summarize: ({ filename }) => `화면 캡처: ${filename ? screenshotFile(filename) : dirname(screenshotFile('x'))}`,
   async run({ filename }, ctx) {
     // 다른 쓰기 도구와 같은 규칙을 거친다. 이 폴더가 정션이거나 이미 있는 파일이 하드 링크면 밖으로 쓰게 된다.
     const file = safeWritePath(screenshotFile(filename ?? `shot-${Date.now()}`));
-    await fs.mkdir(dirname(file), { recursive: true });
-    await getPlatform().screenshot(file);
-    const title = basename(file);
-    ctx.emitArtifact?.({ kind: 'file', id: file, title, ref: file });
-    return `스크린샷을 저장했습니다: ${file}`;
+    // 같은 이름의 파일을 덮어쓸 수 있으므로 다른 쓰기처럼 되돌릴 수 있게 한다.
+    const outcome = await writeWithJournal(
+      file,
+      async () => {
+        await fs.mkdir(dirname(file), { recursive: true });
+        await getPlatform().screenshot(file);
+      },
+      `스크린샷을 저장했습니다: ${file}`
+    );
+    ctx.emitArtifact?.({ kind: 'file', id: file, title: basename(file), ref: file });
+    return outcome;
   },
 });

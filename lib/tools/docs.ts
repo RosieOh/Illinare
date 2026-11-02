@@ -2,7 +2,7 @@ import { promises as fs } from 'node:fs';
 import { join } from 'node:path';
 import type { DeckSlide } from '@/lib/contracts';
 import { addDeck } from '@/lib/store/decks';
-import { PREVIEW_LIMIT, writeWithJournal } from './files';
+import { clip, writeWithJournal } from './files';
 import { desktopDir, safeWritePath } from './paths';
 import { register } from './registry';
 
@@ -31,12 +31,7 @@ register<{ name: string; content: string }>({
   // 파일명은 안전한 문자로 바뀌므로 실제로 저장될 경로를 보여준다.
   summarize: ({ name, content }) => `문서 저장: ${noteFile(name)} (${content.length}자)`,
   async preview({ name, content }) {
-    return {
-      kind: 'text',
-      path: noteFile(name),
-      text: content.slice(0, PREVIEW_LIMIT),
-      truncated: content.length > PREVIEW_LIMIT,
-    };
+    return { kind: 'text', path: noteFile(name), ...clip(content) };
   },
   async run({ name, content }, ctx) {
     const file = noteFile(name);

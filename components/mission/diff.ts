@@ -116,6 +116,19 @@ export function lineDiff(before: string, after: string): DiffRow[] {
   return rows;
 }
 
+export interface HiddenRows {
+  hidden: number;
+}
+
+const MAX_RENDERED_ROWS = 2000;
+
+/** 승인 시트가 멈추지 않도록 그리는 줄 수를 제한한다. 위험한 내용이 끝에 숨지 않게 앞과 뒤를 함께 남긴다. */
+export function capRows<T>(rows: T[], max = MAX_RENDERED_ROWS): Array<T | HiddenRows> {
+  if (rows.length <= max) return rows;
+  const tail = Math.floor(max / 4);
+  return [...rows.slice(0, max - tail), { hidden: rows.length - max }, ...rows.slice(-tail)];
+}
+
 /** 바뀐 줄 근처만 남기고 긴 동일 구간을 접는다. null은 접힌 구간을 뜻한다. */
 export function collapseUnchanged(rows: DiffRow[], context = 3): Array<DiffRow | null> {
   const keep = new Array<boolean>(rows.length).fill(false);
