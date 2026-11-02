@@ -1,9 +1,9 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { useState } from 'react';
 import { Command } from 'lucide-react';
 import { BRAND } from '@/lib/contracts';
-import { Kbd, LiquidGlass, Tooltip, spring } from '@/components/glass';
+import { GlassDrop, Kbd, LiquidGlass, Tooltip } from '@/components/glass';
 import { useApp } from '@/context/AppContext';
 import { useMissions } from '@/context/MissionsContext';
 import { useMediaQuery } from '@/utils/useMediaQuery';
@@ -15,18 +15,21 @@ export default function Rail() {
   const { pendingApprovals } = useMissions();
   const isTabBar = useMediaQuery('(max-width: 819px)');
   const isIconRail = useMediaQuery('(max-width: 1179px) and (min-width: 820px)');
+  const [activeEl, setActiveEl] = useState<HTMLButtonElement | null>(null);
 
   const radius = isTabBar ? 24 : 26;
 
   return (
     <div className="rail">
+      {/* 세로 레일 아래로는 내용이 지나가지 않아 렌즈를 켜도 차이가 보이지 않는다(8/255 이하). 프레임만 쓰므로 탭 바에만 켠다. */}
       <LiquidGlass radius={radius} refract={isTabBar} bezel={12} strength={22} className="flex h-full flex-col p-2 max-[819px]:h-[58px] max-[819px]:flex-row max-[819px]:p-1">
         <div className="flex h-11 shrink-0 items-center gap-2.5 px-2.5 text-label max-[1179px]:justify-center max-[1179px]:px-0 max-[819px]:hidden">
           <BrandMark size={23} className="text-accent shrink-0" />
           <span className="text-headline max-[1179px]:hidden">{BRAND.name}</span>
         </div>
 
-        <nav aria-label="주 메뉴" className="mt-2 flex min-h-0 flex-1 flex-col gap-0.5 max-[819px]:mt-0 max-[819px]:flex-row">
+        <nav aria-label="주 메뉴" className="relative mt-2 flex min-h-0 flex-1 flex-col gap-0.5 max-[819px]:mt-0 max-[819px]:flex-row">
+          <GlassDrop target={activeEl} className="rounded-[18px] max-[819px]:rounded-[20px]" />
           {NAV.map((item) => {
             const active = view === item.id;
             const badge = item.id === 'missions' ? pendingApprovals.length : 0;
@@ -34,6 +37,9 @@ export default function Rail() {
             const button = (
               <button
                 key={item.id}
+                ref={(el) => {
+                  if (el && active) setActiveEl(el);
+                }}
                 type="button"
                 onClick={() => navigate(item.id)}
                 aria-current={active ? 'page' : undefined}
@@ -42,19 +48,11 @@ export default function Rail() {
                   active ? 'font-semibold text-label' : 'font-medium text-label-2 hover:bg-fill-4 hover:text-label'
                 }`}
               >
-                {active && (
-                  <motion.span
-                    layoutId="rail-selection"
-                    transition={spring.snappy}
-                    className="absolute inset-0 rounded-[inherit] bg-[var(--selected)] shadow-[0_1px_4px_rgba(0,20,60,.12),inset_0_0.5px_0_rgba(255,255,255,.4)]"
-                    aria-hidden="true"
-                  />
-                )}
                 <span className="relative flex">
                   <Icon size={19} strokeWidth={active ? 2.2 : 1.9} className={active ? 'text-accent-text' : ''} aria-hidden="true" />
                   {badge > 0 && (
                     <span
-                      className="absolute -top-2 -right-2.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger-fill px-1 text-[10px] leading-none font-bold text-white"
+                      className="absolute -top-2 -right-2.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-warning px-1 text-[10px] leading-none font-bold text-[#3d2100]"
                       aria-hidden="true"
                     >
                       {badge}

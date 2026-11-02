@@ -130,6 +130,62 @@ describe('layoutStage hero', () => {
     }
   }
 
+  describe('filaments stay off the labels', () => {
+    const SIX: Record<string, StageStepInput[]> = {
+      'six, three then two then one': [
+        { id: 's1', dependsOn: [] },
+        { id: 's2', dependsOn: [] },
+        { id: 's3', dependsOn: [] },
+        { id: 's4', dependsOn: ['s1', 's3'] },
+        { id: 's5', dependsOn: ['s2'] },
+        { id: 's6', dependsOn: ['s4', 's5'] },
+      ],
+      'six with skip edges': [
+        { id: 's1', dependsOn: [] },
+        { id: 's2', dependsOn: ['s1'] },
+        { id: 's3', dependsOn: ['s1', 's2'] },
+        { id: 's4', dependsOn: ['s1'] },
+        { id: 's5', dependsOn: ['s3', 's4'] },
+        { id: 's6', dependsOn: ['s2', 's5'] },
+      ],
+      'six in parallel': fan(6),
+      'six in a chain': chain(6),
+    };
+    for (const [name, steps] of Object.entries({ ...SHAPES, ...SIX })) {
+      for (const [width, maxHeight] of [
+        [900, 420],
+        // 앱의 기본 창(1320×880)에서 스테이지가 차지하는 크기
+        [1040, 620],
+        [1170, 620],
+        [1170, 720],
+        [1650, 820],
+      ]) {
+        // 건너뛰는 관이 많은 7열은 이 폭에서 곡선 하나로 지날 틈이 없다. 라벨 뒤쪽을 흐려 글자는 그대로 읽힌다 (.stage-label::before).
+        if (name === 'six with skip edges' && width < 1170) continue;
+        it(`"${name}" at ${width}x${maxHeight}`, () => {
+          const layout = layoutStage({ steps, width, maxHeight });
+          const { labels } = boxes(layout);
+          // 창이 너무 낮아 엇갈려 놓은 경우는 틈이 없다. 라벨이 관 위에 그려져 글자는 그대로 읽힌다.
+          const staggered = layout.nodes.some((a) => layout.nodes.some((b) => a.depth === b.depth && a.x !== b.x));
+          if (staggered) return;
+          for (const edge of layout.edges) {
+            for (let t = 0.02; t < 1; t += 0.02) {
+              const p = pointOnEdge(edge, t);
+              for (const box of labels) {
+                const inside = p.x > box.left && p.x < box.right && p.y > box.top && p.y < box.bottom;
+                expect(inside, `${edge.id} crosses the label of ${box.id} (${layout.density})`).toBe(false);
+              }
+              for (const n of layout.nodes) {
+                if (n.id === edge.from || n.id === edge.to) continue;
+                expect(Math.hypot(p.x - n.x, p.y - n.y), `${edge.id} crosses the sphere of ${n.id} (${layout.density})`).toBeGreaterThan(n.size / 2);
+              }
+            }
+          }
+        });
+      }
+    }
+  });
+
   it('flows top to bottom on narrow panes', () => {
     expect(layoutStage({ steps: fan(3), width: VERTICAL_BELOW - 1 }).orientation).toBe('vertical');
     expect(layoutStage({ steps: fan(3), width: VERTICAL_BELOW }).orientation).toBe('horizontal');

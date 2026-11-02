@@ -1,8 +1,9 @@
 'use client';
 
-import { useId, useRef, type KeyboardEvent, type ReactNode } from 'react';
+import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import type { LucideIcon } from 'lucide-react';
+import { GlassDrop } from './GlassDrop';
 import { spring } from './motion';
 
 // ─── Segmented ───────────────────────────────────────────────
@@ -23,7 +24,7 @@ export interface SegmentedProps<T extends string> {
   className?: string;
 }
 
-/** 선택 표시가 액체처럼 옮겨 가는 세그먼트 컨트롤 */
+/** 선택 표시가 유리 방울처럼 옮겨 가는 세그먼트 컨트롤 */
 export function Segmented<T extends string>({
   options,
   value,
@@ -33,8 +34,8 @@ export function Segmented<T extends string>({
   fullWidth,
   className,
 }: SegmentedProps<T>) {
-  const groupId = useId();
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
+  const [selectedEl, setSelectedEl] = useState<HTMLButtonElement | null>(null);
   const h = size === 'sm' ? 'h-7 text-footnote' : 'h-8.5 text-subhead';
 
   const onKeyDown = (e: KeyboardEvent, index: number) => {
@@ -52,6 +53,7 @@ export function Segmented<T extends string>({
       aria-label={label}
       className={`relative inline-flex rounded-[11px] bg-fill-3 p-0.5 ${fullWidth ? 'flex w-full' : ''} ${className ?? ''}`}
     >
+      <GlassDrop target={selectedEl} className="rounded-[9px]" />
       {options.map((opt, i) => {
         const selected = opt.value === value;
         const Icon = opt.icon;
@@ -60,6 +62,7 @@ export function Segmented<T extends string>({
             key={opt.value}
             ref={(el) => {
               refs.current[i] = el;
+              if (el && selected) setSelectedEl(el);
             }}
             type="button"
             role="radio"
@@ -69,14 +72,6 @@ export function Segmented<T extends string>({
             onKeyDown={(e) => onKeyDown(e, i)}
             className={`press relative flex items-center justify-center gap-1.5 rounded-[9px] px-3 font-medium whitespace-nowrap ${h} ${fullWidth ? 'flex-1' : ''} ${selected ? 'text-label' : 'text-label-2 hover:text-label'}`}
           >
-            {selected && (
-              <motion.span
-                layoutId={`segmented-${groupId}`}
-                transition={spring.snappy}
-                className="absolute inset-0 rounded-[9px] bg-[var(--selected)] bg-[linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0)_60%)] shadow-[0_1px_3px_rgba(0,0,0,.14),inset_0_0.5px_0_rgba(255,255,255,.35)]"
-                aria-hidden="true"
-              />
-            )}
             <span className="relative flex items-center gap-1.5">
               {Icon && <Icon size={size === 'sm' ? 13 : 15} aria-hidden="true" />}
               {opt.label}

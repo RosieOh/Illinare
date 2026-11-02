@@ -85,7 +85,8 @@ function describeNode(node: StageNode, view: MissionView): NodeInfo {
 
 function nodeTint(node: StageNode, view: MissionView, status: StepStatus): string {
   if (status === 'failed') return 'var(--danger)';
-  if (node.kind === 'answer') return status === 'done' ? 'var(--success)' : 'var(--accent)';
+  // 완료는 체크 배지가 말한다. 합쳐진 액체와 유리가 같은 색이어야 한 몸으로 보인다.
+  if (node.kind === 'answer') return 'var(--accent)';
   if (node.kind === 'conductor') return `var(${AGENTS.conductor.colorVar})`;
   const agent = view.steps[node.id]?.step.agent;
   return agent ? `var(${AGENTS[agent].colorVar})` : 'var(--accent)';
@@ -253,7 +254,7 @@ function NodeView({
       >
         {/* 답변이 시작되면 이 원이 그대로 펼쳐져 읽는 표면이 된다 */}
         {morphId && <motion.span layoutId={morphId} className="orb-morph" style={{ borderRadius: node.size / 2 }} aria-hidden="true" />}
-        <Orb size={node.size} status={info.status} tint={tint} icon={Icon} poolId={node.id} />
+        <Orb size={node.size} status={info.status} tint={tint} icon={Icon} poolId={node.id} lens={density !== 'band'} />
         {showBadge && (
           <motion.span
             className="orb-badge"

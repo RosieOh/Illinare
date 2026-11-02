@@ -8,4 +8,6 @@ export const spring = {
   morph: { type: 'spring', stiffness: 420, damping: 36, mass: 1 },
   /** 들어오는 콘텐츠 */
   gentle: { type: 'spring', stiffness: 380, damping: 34, mass: 1 },
+  /** 유리 방울의 뒤쪽 가장자리. 앞쪽은 snappy를 타고 이쪽은 늦게 따라온다 */
+  drop: { type: 'spring', stiffness: 380, damping: 34, mass: 1.7 },
 } satisfies Record<string, Transition>;

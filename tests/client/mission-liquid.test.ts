@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ANSWER_NODE, CONDUCTOR_NODE, layoutStage, type StageLayout } from '@/components/mission/layout';
-import { applyView, BEAD_MS, deriveTargets, emptyModel, frameAt, needsAnimation, POOL_WALL, poolShape, rivuletPath, stepPool, STREAM_ENTRY, streamHalf, syncLayout, syncTeam, type LiquidFrame, type LiquidModel, type TeamPlacement } from '@/components/mission/liquid';
+import { applyView, BEAD_MS, deriveTargets, emptyModel, frameAt, LINE_ENTRY, mergedColor, needsAnimation, POOL_WALL, poolShape, rivuletPath, stepPool, STREAM_ENTRY, streamHalf, syncLayout, syncTeam, type LiquidFrame, type LiquidModel, type TeamPlacement } from '@/components/mission/liquid';
 import type { MissionView, PlanStep, StepStatus, StepView } from '@/lib/contracts';
 import { emptyUsage } from '@/lib/missions/reducer';
 
@@ -96,11 +96,11 @@ describe('deriveTargets', () => {
     expect(deriveTargets(view({ s1: 'done', s2: 'done' }), edges).get(ANSWER_NODE)?.level).toBeGreaterThan(0);
   });
 
-  it('stacks finished colours in finish order once the result is full', () => {
+  it('keeps every contributor, in finish order, inside one merged liquid once the result is full', () => {
     const edges = [{ from: 's2', to: ANSWER_NODE }];
     const full = deriveTargets(view({ s1: 'done', s2: 'done' }, { status: 'done' }), edges).get(ANSWER_NODE);
     expect(full?.level).toBeGreaterThan(0.6);
-    expect(full?.colors).toEqual(['var(--agent-researcher)', 'var(--agent-analyst)']);
+    expect(full?.colors).toEqual(['var(--agent-researcher)', 'var(--agent-analyst)'].map(mergedColor));
   });
 });
 
@@ -209,11 +209,11 @@ describe('frameAt is a pure function of the model and time', () => {
     expect(level(BEAD_MS * 3)).toBeGreaterThan(0.4);
   });
 
-  it('runs every pipe from wall to wall, never into the middle of a sphere', () => {
+  it('ends every thin pipe just inside the glass, short of the icon in the middle', () => {
     const v = view({ s1: 'running' });
     const { model } = setup(v);
     const frame = frameAt(model, BEAD_MS * 4);
-    const near = (p: { cx: number; cy: number; r: number }, x: number, y: number) => Math.abs(Math.hypot(x - p.cx, y - p.cy) - p.r);
+    const near = (p: { cx: number; cy: number; r: number }, x: number, y: number) => Math.abs(Math.hypot(x - p.cx, y - p.cy) - p.r * LINE_ENTRY);
     for (const edge of frame.edges) {
       const nums = (edge.d.match(/-?\d+(\.\d+)?/g) ?? []).map(Number);
       const distances = frame.pools.map((p) => near(p, nums[0], nums[1]));
@@ -344,6 +344,25 @@ describe('stream source', () => {
   it('adds no blob or hook inside the sending sphere', () => {
     const frame = frameAt(forkModel(forkView({ s1: 'running', s2: 'running' })), BEAD_MS * 4);
     expect(frame.pools.find((p) => p.id === CONDUCTOR_NODE)?.rivulets).toHaveLength(0);
+  });
+
+  it('pours from where the stream crosses the wall, not from where the thin line ends inside', () => {
+    const frame = frameAt(forkModel(forkView({ s1: 'running' })), BEAD_MS * 4);
+    const edge = frame.edges.find((e) => e.id === `${CONDUCTOR_NODE}->s1`);
+    const target = frame.pools.find((p) => p.id === 's1');
+    if (!edge || !target?.rivulets.length) throw new Error('the stream has not reached the sphere');
+    const [x0, y0, x1, y1, x2, y2, x3, y3] = (edge.d.match(/-?\d+(\.\d+)?/g) ?? []).map(Number);
+    let crossing = 0;
+    for (let i = 0; i <= 2000; i++) {
+      const t = i / 2000;
+      const u = 1 - t;
+      const x = u * u * u * x0 + 3 * u * u * t * x1 + 3 * u * t * t * x2 + t * t * t * x3;
+      const y = u * u * u * y0 + 3 * u * u * t * y1 + 3 * u * t * t * y2 + t * t * t * y3;
+      if (Math.hypot(x - target.cx, y - target.cy) >= target.r) crossing = Math.atan2(y - target.cy, x - target.cx);
+    }
+    const [sx, sy] = (target.rivulets[0].d.match(/-?\d+(\.\d+)?/g) ?? []).map(Number);
+    const apart = Math.abs(Math.atan2(Math.sin(crossing - Math.atan2(sy, sx)), Math.cos(crossing - Math.atan2(sy, sx))));
+    expect(apart).toBeLessThan(0.03);
   });
 
   it('comes out in the source colour and fades to the stream colour', () => {

@@ -77,6 +77,10 @@ export function finishedColors(view: MissionView): string[] {
     .map((s) => `var(${AGENTS[s.step.agent].colorVar})`);
 }
 
+export function mergedColor(color: string): string {
+  return `color-mix(in oklab, ${color} 12%, var(--accent))`;
+}
+
 /**
  * 결과 구는 비어서 시작한다. 들어오는 관(마지막 단계들)으로 물방울이 건너와야 비로소 찬다.
  * 관이 말라 있는데 액체가 있으면 어디서 왔는지 설명되지 않는다.
@@ -85,7 +89,8 @@ function answerPool(view: MissionView, edges: Array<Pick<StageEdge, 'from' | 'to
   const status = answerStatus(view);
   if (status === 'failed' && view.stepOrder.length === 0) return { level: 0.1, colors: [COLOR_DANGER], slosh: 0 };
   const colors = finishedColors(view);
-  const palette = colors.length > 0 ? colors : [`var(${AGENTS.conductor.colorVar})`];
+  // 합쳐진 뒤에는 한 액체다. 기여한 에이전트의 색은 띠가 아니라 한 몸 안의 옅은 결로만 남는다.
+  const palette = colors.length > 0 ? colors.map(mergedColor) : [`var(${AGENTS.conductor.colorVar})`];
   const total = view.stepOrder.length;
   if (status === 'done') return { level: RESULT_FULL, colors: palette, slosh: 0 };
   if (status === 'running') return { level: total > 0 ? Math.max(0.56, 0.44 * (colors.length / total) + 0.12) : 0.5, colors: palette, slosh: 0.7 };
@@ -658,6 +663,16 @@ function wallToWall(points: EdgePoints, from: PoolFrame | undefined, to: PoolFra
   return subBezier(points, t0, t1);
 }
 
+/** 얇은 관이 끝나는 깊이 (구 반지름 = 1). 아이콘 바로 앞까지 들어가 벽의 렌즈가 꺾는 모습을 보여 주고, 중간에 끊겨 보이지 않는다. */
+export const LINE_ENTRY = 0.36;
+
+/** 얇은 관의 경로. 액체와 물방울은 벽에서 멈추고 얇은 관만 유리 뒤로 더 들어간다. */
+function linePath(points: EdgePoints, from: PoolFrame | undefined, to: PoolFrame | undefined): string {
+  const t0 = from ? exitParam(points, from.cx, from.cy, from.r * LINE_ENTRY, false) : 0;
+  const t1 = to ? exitParam(points, to.cx, to.cy, to.r * LINE_ENTRY, true) : 1;
+  return edgePath(subBezier(points, t0, t1));
+}
+
 /** 관 끝이 유리 벽을 넘어 들어가는 깊이 (구 반지름 = 1). 렌더러의 마스크 구멍과 같은 값이다. */
 export const STREAM_ENTRY = 0.86;
 const STREAM_SAMPLES = 44;
@@ -796,12 +811,13 @@ export function frameAt(model: LiquidModel, t: number, frozen = false): LiquidFr
     const fade = flowing ? streamFade(raw, from, to) : ([0, 0, 0, 0] as EdgeFrame['fade']);
     const scale = Math.min(1.3, Math.max(0.35, Math.min(from?.r ?? NECK_REF_RADIUS, to?.r ?? NECK_REF_RADIUS) / NECK_REF_RADIUS));
     const base = edge.neckWidth ?? 6.4 * scale;
+    const line = linePath(raw, from, to);
     if (!flowing) {
-      edges.push({ id: edge.id, d: edgePath(points), state: edge.state, color: edge.color, width: 0, stream: '', sourceColor, fade, reveal: 1 });
+      edges.push({ id: edge.id, d: line, state: edge.state, color: edge.color, width: 0, stream: '', sourceColor, fade, reveal: 1 });
       continue;
     }
     if (frozen) {
-      edges.push({ id: edge.id, d: edgePath(points), state: edge.state, color: edge.color, width: base, stream: streamOutline(raw, from, to, base, 1, route.wet), sourceColor, fade, reveal: 1 });
+      edges.push({ id: edge.id, d: line, state: edge.state, color: edge.color, width: base, stream: streamOutline(raw, from, to, base, 1, route.wet), sourceColor, fade, reveal: 1 });
       pour(edge.to, points[6], points[7], edge.color, base * RIVULET_SHARE);
       continue;
     }
@@ -809,7 +825,7 @@ export function frameAt(model: LiquidModel, t: number, frozen = false): LiquidFr
     const age = Math.max(0, t - edge.flowSince - NECK_DELAY_MS);
     const reveal = age > 0 ? easeOut(clamp01(age / NECK_GROW_MS)) : 0;
     const width = reveal > 0 ? base * (1 + 0.16 * Math.sin(t / 340 + points[0])) : 0;
-    edges.push({ id: edge.id, d: edgePath(points), state: edge.state, color: edge.color, width, stream: reveal > 0 ? streamOutline(raw, from, to, width, reveal, route.wet) : '', sourceColor, fade, reveal });
+    edges.push({ id: edge.id, d: line, state: edge.state, color: edge.color, width, stream: reveal > 0 ? streamOutline(raw, from, to, width, reveal, route.wet) : '', sourceColor, fade, reveal });
     if (reveal >= 1) {
       pour(edge.to, points[6], points[7], edge.color, base * RIVULET_SHARE);
       const count = 2;

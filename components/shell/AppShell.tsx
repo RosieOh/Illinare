@@ -20,6 +20,7 @@ import GestureLayer from '@/components/gesture/GestureLayer';
 import Island from './Island';
 import Onboarding from './Onboarding';
 import Rail from './Rail';
+import { useLensBudget } from './useLensBudget';
 import type { ViewProps } from './ViewFrame';
 import Wallpaper from './Wallpaper';
 import { NAV } from './nav';
@@ -107,6 +108,7 @@ export default function AppShell() {
 
   useGlobalShortcuts();
   useSpeakAnswers();
+  useLensBudget();
 
   return (
     <div className="app">

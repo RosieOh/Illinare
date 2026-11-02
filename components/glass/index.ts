@@ -4,6 +4,7 @@
  * - Material: 콘텐츠 표면. 일반 카드는 전부 이것을 쓴다.
  */
 export { LiquidGlass, type LiquidGlassProps } from './LiquidGlass';
+export { GlassDrop, type GlassDropProps } from './GlassDrop';
 export { Material, type MaterialProps } from './Material';
 export { Button, IconButton, type ButtonProps, type ButtonSize, type ButtonVariant, type IconButtonProps } from './Button';
 export { Segmented, Toggle, type SegmentedOption, type SegmentedProps, type ToggleProps } from './Controls';

@@ -163,6 +163,58 @@ function round(v: number): number {
   return Math.round(v * 10) / 10;
 }
 
+/** 곡선이 어떤 라벨이나, 자기 양 끝이 아닌 구를 지나는가. 아래쪽 라벨만 있는 가로 배치에서 쓴다. */
+function routeHits(points: EdgePoints, from: StageNode, to: StageNode, nodes: StageNode[], density: StageDensity): boolean {
+  const below = labelHeight(density);
+  for (let t = 0.02; t < 1; t += 0.02) {
+    const p = pointOnPoints(points, t);
+    for (const n of nodes) {
+      if (n !== from && n !== to && Math.hypot(p.x - n.x, p.y - n.y) < n.size / 2 + 3) return true;
+      if (n.labelSide !== 'below') continue;
+      const top = n.y + n.size / 2 + LABEL_GAP;
+      if (Math.abs(p.x - n.x) < n.labelWidth / 2 + 2 && p.y > top - 2 && p.y < top + below + 2) return true;
+    }
+  }
+  return false;
+}
+
+/** 곧게 뻗는 구간을 늘리는 정도. 값이 클수록 세로 이동이 열 사이의 좁은 틈에 모인다. */
+const ROUTE_TIGHTNESS = [0.5, 0.62, 0.74, 0.86];
+const ROUTE_ARRIVALS = [0, 10, -10, 18, -18, 28, -28];
+const ROUTE_LANES = [0, 24, -24, 48, -48, 72, -72];
+
+/**
+ * 부딪히지 않는 경로를 찾는다. 앞의 후보일수록 부드러운 곡선이다.
+ * 도착점 근처의 높이를 살짝 틀어 엇갈린 묶음 사이의 틈으로 들어가거나, 사이 열을 위아래로 넓게 돌아간다.
+ * 끝내 없으면 원래 곡선을 쓴다. 라벨은 관보다 위에 그려지므로 글자는 계속 읽힌다.
+ */
+function avoidObstacles(points: EdgePoints, from: StageNode, to: StageNode, nodes: StageNode[], density: StageDensity): EdgePoints {
+  if (!routeHits(points, from, to, nodes, density)) return points;
+  const dx = to.x - from.x;
+  for (const tight of ROUTE_TIGHTNESS) {
+    for (const arrival of ROUTE_ARRIVALS) {
+      const candidate: EdgePoints = [from.x, from.y, from.x + dx * tight, from.y, to.x - dx * tight, to.y + arrival, to.x, to.y];
+      if (!routeHits(candidate, from, to, nodes, density)) return candidate;
+    }
+  }
+  const between = nodes.filter((n) => n.depth > from.depth && n.depth < to.depth);
+  if (between.length === 0) return points;
+  const under = LABEL_GAP + labelHeight(density);
+  const size = Math.max(...between.map((n) => n.size));
+  const edges = [Math.min(...between.map((n) => n.y)) - size / 2 - 12, Math.max(...between.map((n) => n.y)) + size / 2 + under + 12];
+  for (const extra of ROUTE_LANES) {
+    for (const lane of edges) {
+      const pull = (lane + extra - ((from.y + to.y) / 2) * 0.25) / 0.75;
+      // 제어점이 안쪽에 있을수록 자기 열의 라벨을 지난 뒤에 오르내린다.
+      for (const inset of [0.25, 0.4, 0.5, 0.62]) {
+        const candidate: EdgePoints = [from.x, from.y, from.x + dx * inset, pull, to.x - dx * inset, pull, to.x, to.y];
+        if (!routeHits(candidate, from, to, nodes, density)) return candidate;
+      }
+    }
+  }
+  return points;
+}
+
 function buildEdges(steps: StageStepInput[], nodes: Map<string, StageNode>, orientation: StageOrientation, density: StageDensity = 'band'): StageEdge[] {
   const known = new Set(steps.map((s) => s.id));
   const hasDependents = new Set<string>();
@@ -195,6 +247,7 @@ function buildEdges(steps: StageStepInput[], nodes: Map<string, StageNode>, orie
         const pull = (lane - ((a.y + b.y) / 2) * 0.25) / 0.75;
         points = [a.x, a.y, a.x + (b.x - a.x) * 0.25, pull, a.x + (b.x - a.x) * 0.75, pull, b.x, b.y];
       }
+      if (density !== 'band') points = avoidObstacles(points, a, b, all, density);
     } else {
       const mid = (a.y + b.y) / 2;
       points = [a.x, a.y, a.x, mid, b.x, mid, b.x, b.y];
@@ -240,15 +293,16 @@ function layoutHorizontal(steps: StageStepInput[], width: number, maxHeight: num
   const sidePad = 94;
   const gapFit = (width - sidePad * 2) / (columns - 1);
   const columnGap = Math.min(MAX_COLUMN_GAP, Math.max(MIN_COLUMN_GAP, gapFit));
-  const labelWidth = Math.min(columnGap - 10, 182);
+  // 라벨 사이에 틈을 남긴다. 곡선이 위아래로 옮겨 가는 자리다.
+  const labelWidth = Math.min(columnGap * 0.74, 182);
   const canStagger = columnGap >= 200;
 
   let density: 'full' | 'compact' | 'tight' = 'tight';
   let staggered = false;
+  // 엇갈린 묶음은 곡선이 라벨을 피할 틈이 거의 없어 정말 높이가 모자랄 때만 쓴다.
   const order: Array<['full' | 'compact' | 'tight', boolean]> = [
     ['full', false],
     ['compact', false],
-    ['compact', true],
     ['tight', false],
     ['tight', true],
   ];

@@ -97,6 +97,46 @@ export function lensAssets({ width, height, radius, bezel }: LensSpec): LensAsse
   return assets;
 }
 
+/**
+ * 유리구의 변위: 가운데는 거의 그대로이고 벽에 가까울수록 안쪽을 끌어와 볼록하게 보인다.
+ * dx, dy는 중심에서 잰 값이고 반지름이 1이다. 구 밖은 움직이지 않는다.
+ */
+export function sphereDisplacement(dx: number, dy: number): { x: number; y: number } {
+  const r = Math.hypot(dx, dy);
+  if (r === 0 || r >= 1) return { x: 0, y: 0 };
+  const magnitude = r * r * r;
+  return { x: (-dx / r) * magnitude, y: (-dy / r) * magnitude };
+}
+
+const sphereCache = new Map<number, string>();
+
+/** 구 크기는 몇 종류뿐이라 크기별로 하나만 만든다. */
+export function sphereLensMap(size: number): string | null {
+  const n = Math.max(2, Math.round(size));
+  const hit = sphereCache.get(n);
+  if (hit) return hit;
+  const canvas = document.createElement('canvas');
+  canvas.width = n;
+  canvas.height = n;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+  const image = ctx.createImageData(n, n);
+  for (let y = 0; y < n; y++) {
+    for (let x = 0; x < n; x++) {
+      const { x: mx, y: my } = sphereDisplacement(((x + 0.5) / n) * 2 - 1, ((y + 0.5) / n) * 2 - 1);
+      const i = (y * n + x) * 4;
+      image.data[i] = 128 + mx * 127;
+      image.data[i + 1] = 128 + my * 127;
+      image.data[i + 2] = 128;
+      image.data[i + 3] = 255;
+    }
+  }
+  ctx.putImageData(image, 0, 0);
+  const map = canvas.toDataURL('image/png');
+  sphereCache.set(n, map);
+  return map;
+}
+
 let supported: boolean | null = null;
 
 /** backdrop-filter: url()은 크로뮴 계열에서만 동작한다. Safari, Firefox는 블러만 쓴다. */

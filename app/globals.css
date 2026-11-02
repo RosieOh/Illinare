@@ -512,6 +512,39 @@
     transform: scale(0.985);
   }
 
+  /* 선택 표시: 컨트롤 위에 얹힌 유리 방울. 앞 가장자리가 먼저 가고 뒤가 따라와 늘어났다가 모인다 */
+  .glass-drop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 60%),
+      var(--selected);
+    box-shadow:
+      inset 0 0.5px 0 var(--lg-spec-top),
+      inset 0 -0.5px 0.5px var(--lg-spec-bottom),
+      0 1px 3px rgba(0, 20, 60, 0.14),
+      0 4px 10px -5px rgba(0, 20, 60, 0.24);
+    -webkit-backdrop-filter: saturate(150%) brightness(1.04);
+    backdrop-filter: saturate(150%) brightness(1.04);
+  }
+
+  [data-transparency="reduced"] .glass-drop {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  /* 프레임을 지키지 못하는 기기: 렌즈만 끄고 프로스트 유리는 남긴다 */
+  [data-lens-budget="low"] .liquid-lens {
+    display: none;
+  }
+
+  [data-lens-budget="low"] .liquid[data-lens]:not([data-morphing]) > .liquid-backdrop {
+    -webkit-mask: none;
+    mask: none;
+  }
+
   [data-transparency="reduced"] .liquid-backdrop,
   [data-transparency="reduced"] .liquid[data-lens]:not([data-morphing]) > .liquid-backdrop {
     -webkit-backdrop-filter: none;
@@ -615,13 +648,17 @@
     padding-bottom: var(--shell-bottom);
   }
 
-  /* 스크롤 가장자리 효과: 유리 아래로 들어가는 콘텐츠를 점진적으로 흐린다 */
+  /*
+   * 스크롤 가장자리: 창 끝에 닿는 내용만 부드럽게 정리한다.
+   * 아일랜드와 컴포저 아래에서는 흐리지 않는다. 렌즈가 또렷한 내용을 꺾어야 유리처럼 보인다.
+   */
   .edge-top,
   .edge-bottom {
     position: fixed;
     left: 0;
     right: 0;
     z-index: 20;
+    height: 12px;
     pointer-events: none;
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
@@ -629,15 +666,12 @@
 
   .edge-top {
     top: 0;
-    height: calc(var(--shell-top) - 2px);
-    -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent);
-    mask-image: linear-gradient(to bottom, #000 45%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent);
+    mask-image: linear-gradient(to bottom, #000 55%, transparent);
   }
 
-  /* 컴포저 아래에서는 흐리지 않는다. 렌즈가 또렷한 내용을 꺾어야 유리처럼 보인다. 맨 아래 가장자리만 부드럽게 정리한다. */
   .edge-bottom {
     bottom: 0;
-    height: 16px;
     -webkit-mask-image: linear-gradient(to top, #000 55%, transparent);
     mask-image: linear-gradient(to top, #000 55%, transparent);
   }
@@ -1157,6 +1191,15 @@
   backdrop-filter: blur(0.5px) saturate(1.4) brightness(1.03);
 }
 
+/* 렌즈: 뒤로 들어온 필라멘트가 벽에서 꺾인다 */
+.orb[data-lens] .orb-lens {
+  backdrop-filter: var(--orb-refract) saturate(1.4) brightness(1.03);
+}
+
+[data-lens-budget="low"] .orb[data-lens] .orb-lens {
+  backdrop-filter: blur(0.5px) saturate(1.4) brightness(1.03);
+}
+
 /* 액체: 필터 없는 벡터. 어떤 해상도에서도 가장자리가 매끈하다 */
 .orb-liquid {
   position: absolute;
@@ -1291,7 +1334,8 @@
 }
 
 /* 투명도 줄이기: 굴절 없이 또렷한 테두리 */
-[data-transparency="reduced"] .orb-lens {
+[data-transparency="reduced"] .orb-lens,
+[data-transparency="reduced"] .orb[data-lens] .orb-lens {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
   background: color-mix(in srgb, var(--surface-2) 22%, transparent);
@@ -1411,10 +1455,28 @@
 /* 라벨: 받침 없이 배경 위에 바로 놓는다 */
 .stage-label {
   position: absolute;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   min-width: 0;
   cursor: pointer;
+}
+
+/* 좁은 스테이지에서 어쩔 수 없이 라벨 뒤로 지나가는 관은 흐려서 글자와 겹쳐 읽히지 않게 한다 */
+.stage-label::before {
+  content: "";
+  position: absolute;
+  inset: -3px -8px;
+  z-index: -1;
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  -webkit-mask: radial-gradient(closest-side, #000 72%, transparent);
+  mask: radial-gradient(closest-side, #000 72%, transparent);
+}
+
+[data-transparency="reduced"] .stage-label::before {
+  display: none;
 }
 
 .stage-label[data-side="below"] {

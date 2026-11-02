@@ -53,7 +53,8 @@ export function staticBackground(p: Palette): string {
 
 const VERT = `attribute vec2 a;void main(){gl_Position=vec4(a,0.,1.);}`;
 
-const FRAG = `precision mediump float;
+const FRAG = `#extension GL_OES_standard_derivatives : enable
+precision mediump float;
 uniform vec2 u_res;uniform float u_t;uniform vec3 u_base;uniform vec3 u_c[5];uniform float u_lift;uniform float u_warm;
 float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
@@ -66,6 +67,11 @@ for(int i=0;i<5;i++){float f=float(i);
 vec2 c=vec2((.5+.52*cos(u_t*.043*(1.+f*.31)+f*2.4))*ar,.5+.56*sin(u_t*.037*(1.+f*.27)+f*1.7));
 float d=length(p-c);col=mix(col,u_c[i],exp(-d*d*2.2)*.92);}
 col=mix(col,col*vec3(1.05,1.,.93),u_warm);
+#ifdef GL_OES_standard_derivatives
+float q=n(p*1.3+vec2(u_t*.018,-u_t*.014))*3.4+p.x*.8-p.y*1.2;
+float e=abs(fract(q)-.5)/max(fwidth(q),.0001);
+col+=(1.-smoothstep(.0,1.1,e))*mix(.042,-.024,smoothstep(.3,.65,dot(u_base,vec3(.3,.59,.11))));
+#endif
 col+=u_lift;
 col+=(h(gl_FragCoord.xy+fract(u_t))-.5)/255.*2.;
 gl_FragColor=vec4(col,1.);}`;
@@ -115,6 +121,8 @@ export default function Wallpaper({ id, theme, energized }: WallpaperProps) {
     if (!canvas || reduceMotion) return;
     const gl = canvas.getContext('webgl', { antialias: false, alpha: false, powerPreference: 'low-power' });
     if (!gl) return;
+    // 물결선의 굵기를 화면에서 일정하게 맞추는 데 쓴다. 없는 GPU에서는 선 없이 그라디언트만 그린다.
+    gl.getExtension('OES_standard_derivatives');
 
     const vs = compile(gl, gl.VERTEX_SHADER, VERT);
     const fs = compile(gl, gl.FRAGMENT_SHADER, FRAG);
