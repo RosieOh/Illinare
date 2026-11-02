@@ -3,14 +3,16 @@ import type { AddressInfo } from 'node:net';
 import Anthropic from '@anthropic-ai/sdk';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runAgentLoop } from '@/lib/agents/agent-loop';
-import { describeError } from '@/lib/agents/errors';
+import { BudgetExceededError, describeError } from '@/lib/agents/errors';
 import { createClient, type ToolResultBlockParam, type ToolUseBlock } from '@/lib/agents/llm';
 import { createMission, resetMissionRegistryForTests, waitForMission } from '@/lib/agents/mission';
-import { CONDUCTOR_PLAN_SYSTEM, SPECIALISTS } from '@/lib/agents/roster';
+import { CONDUCTOR_PLAN_SYSTEM, CONDUCTOR_SYNTH_SYSTEM, SPECIALISTS } from '@/lib/agents/roster';
+import { dataPath, writeJson } from '@/lib/store/json';
 import { patchSettings } from '@/lib/store/settings';
 import { validateInput } from '@/lib/tools/validate';
 import type { MissionView } from '@/lib/contracts';
 import '@/lib/tools';
+import { waitUntil } from './helpers';
 
 /**
  * 실제 SDK를 그대로 쓰고 API 서버만 흉내 낸다. 실제 키 없이 요청 본문과 헤더,
@@ -27,7 +29,11 @@ const recorded: Recorded[] = [];
 let responder: (body: Record<string, unknown>, index: number) => Reply = () => ({ status: 500, json: {} });
 let server: Server;
 
-type Reply = { status: number; json: unknown } | { sse: unknown[]; cut?: boolean };
+/** hold: 스트림을 끝내지 않는다. 클라이언트가 끊을 때까지 열어 둔다. delayMs: 응답을 끝내기 전에 기다린다. */
+type Reply = { status: number; json: unknown } | { sse: unknown[]; cut?: boolean; hold?: boolean; delayMs?: number };
+
+/** 지금 열려 있는 스트리밍 요청 수. 동시 호출과 끊김을 서버 쪽에서 본다. */
+const wire = { open: 0, maxOpen: 0, disconnected: 0 };
 
 function fallbackEvents(index: number, category = 'cyber'): unknown[] {
   return [
@@ -118,15 +124,26 @@ beforeAll(async () => {
       recorded.push({ headers: req.headers, body });
       const reply = responder(body, recorded.length - 1);
       if ('sse' in reply) {
+        wire.open++;
+        wire.maxOpen = Math.max(wire.maxOpen, wire.open);
+        let finished = false;
+        res.on('close', () => {
+          wire.open--;
+          if (!finished) wire.disconnected++;
+        });
         res.writeHead(200, { 'content-type': 'text/event-stream' });
         for (const event of reply.sse) {
           res.write(`event: ${(event as { type: string }).type}\ndata: ${JSON.stringify(event)}\n\n`);
         }
+        if (reply.hold) return;
         if (reply.cut) {
           setTimeout(() => res.destroy(), 20);
           return;
         }
-        res.end();
+        setTimeout(() => {
+          finished = true;
+          res.end();
+        }, reply.delayMs ?? 0);
       } else {
         res.writeHead(reply.status, { 'content-type': 'application/json' });
         res.end(JSON.stringify(reply.json));
@@ -144,6 +161,7 @@ afterAll(async () => {
 
 beforeEach(async () => {
   recorded.length = 0;
+  Object.assign(wire, { open: 0, maxOpen: 0, disconnected: 0 });
   await patchSettings({ budgetUsd: 100, reviewPlans: false, toolPolicies: {}, modelPreset: 'best' });
   resetMissionRegistryForTests();
 });
@@ -170,6 +188,105 @@ function loopInput(model = 'claude-opus-5-5') {
     },
   };
 }
+
+describe('the cost cap on the wire', () => {
+  const writers = (tasks: string[]) => ({
+    title: '병렬 작성',
+    route: 'team',
+    rationale: '',
+    steps: tasks.map((task, i) => ({ id: `s${i}`, agent: 'writer', title: `단계${i}`, task, dependsOn: [] })),
+  });
+  const isWriter = (body: Record<string, unknown>) => body.system === SPECIALISTS.writer.system;
+
+  function startWith(inputTokens: number) {
+    return {
+      type: 'message_start',
+      message: { id: 'msg_w', type: 'message', role: 'assistant', model: 'claude-opus-5-5', content: [], stop_reason: null, stop_sequence: null, usage: usage({ input_tokens: inputTokens, output_tokens: 1 }) },
+    };
+  }
+
+  it('sends three cheap parallel calls at once, on a budget where the full max_tokens of even two would not fit', async () => {
+    await patchSettings({ budgetUsd: 2 });
+    responder = (body) =>
+      body.system === CONDUCTOR_PLAN_SYSTEM
+        ? { sse: textTurn(JSON.stringify(writers(['가', '나', '다']))) }
+        : isWriter(body)
+          ? { sse: textTurn('끝'), delayMs: 40 }
+          : { sse: textTurn('종합') };
+    const view = (await waitForMission(await createMission('세 가지 써줘'))) as MissionView;
+    expect(view.status).toBe('done');
+    expect(wire.maxOpen).toBe(3);
+  });
+
+  it('holds back a parallel call whose estimated input does not fit, then runs it once real usage settles', async () => {
+    // 기억 200개면 10만 자다. 호출마다 입력을 약 $0.23, 출력 몫 $0.08을 예약해 상한 $0.8에는 두 개만 들어간다.
+    // 지시문을 늘리면 안 된다. 계획 자체가 그만큼의 출력 비용이 되어 먼저 끊긴다.
+    await patchSettings({ budgetUsd: 0.8 });
+    const now = Date.now();
+    const memory = Array.from({ length: 200 }, (_, i) => ({ id: `mem_${i}`, text: 'ㄱ'.repeat(500), source: 'user', createdAt: now }));
+    await writeJson(dataPath('memory.json'), memory);
+    responder = (body) =>
+      body.system === CONDUCTOR_PLAN_SYSTEM
+        ? { sse: textTurn(JSON.stringify(writers(['가', '나', '다']))) }
+        : isWriter(body)
+          ? { sse: textTurn('끝'), delayMs: 60 }
+          : { sse: textTurn('종합') };
+    try {
+      const view = (await waitForMission(await createMission('세 가지 써줘'))) as MissionView;
+      expect(wire.maxOpen).toBe(2);
+      // 실제 비용은 적었으므로 세 번째도 결국 돌고 미션은 끝난다.
+      expect(recorded.filter((r) => isWriter(r.body))).toHaveLength(3);
+      expect(view.status).toBe('done');
+    } finally {
+      await writeJson(dataPath('memory.json'), []);
+    }
+  });
+
+  it('refuses a call that cannot fit, in the failure mode the UI already handles, before anything is sent', async () => {
+    // 계획에 $0.04를 쓰면 상한 $0.05에는 다음 호출의 예약이 들어가지 않는다.
+    await patchSettings({ budgetUsd: 0.05 });
+    responder = (body) =>
+      body.system === CONDUCTOR_PLAN_SYSTEM
+        ? { sse: [startWith(10_000), ...textTurn(JSON.stringify(writers(['가']))).slice(1)] }
+        : { sse: textTurn('끝') };
+    const view = (await waitForMission(await createMission('써줘'))) as MissionView;
+    expect(view.status).toBe('failed');
+    expect(view.error?.code).toBe('budget_exceeded');
+    expect(view.steps.s0.status).toBe('failed');
+    expect(recorded.filter((r) => isWriter(r.body))).toHaveLength(0);
+    expect(view.usage.costUsd).toBeLessThanOrEqual(0.05);
+    expect(describeError(new BudgetExceededError(0.05)).message).toContain('상한');
+  });
+
+  it('cuts live streams once real input pushes the mission past the cap, and the server sees the disconnect', async () => {
+    // 지시는 짧아 예약은 통과하지만 실제 입력은 12만 토큰($0.48)씩이다. 셋이면 $1.44로 상한 $1을 넘는다.
+    await patchSettings({ budgetUsd: 1 });
+    responder = (body) =>
+      body.system === CONDUCTOR_PLAN_SYSTEM
+        ? { sse: textTurn(JSON.stringify(writers(['가', '나', '다']))) }
+        : { sse: [startWith(120_000), { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } }], hold: true };
+    const view = (await waitForMission(await createMission('세 가지 써줘'))) as MissionView;
+    expect(view.status).toBe('failed');
+    expect(view.error?.code).toBe('budget_exceeded');
+    await waitUntil(() => wire.disconnected >= 2, '서버 쪽 끊김');
+    // 입력 추정이 빗나가면 넘을 수는 있다. 그래도 호출들의 실제 입력 합을 넘지 않고, 그 뒤로 새 호출도 없다.
+    expect(view.usage.costUsd).toBeGreaterThan(1);
+    expect(view.usage.costUsd).toBeLessThan(1.5);
+    expect(recorded.filter((r) => r.body.system === CONDUCTOR_SYNTH_SYSTEM)).toHaveLength(0);
+  });
+
+  it('counts failed-after-cut usage only once', async () => {
+    await patchSettings({ budgetUsd: 1 });
+    responder = (body) =>
+      body.system === CONDUCTOR_PLAN_SYSTEM
+        ? { sse: textTurn(JSON.stringify(writers(['가']))) }
+        : { sse: [startWith(300_000)], hold: true };
+    const view = (await waitForMission(await createMission('써줘'))) as MissionView;
+    expect(view.error?.code).toBe('budget_exceeded');
+    // 계획 호출의 몇 토큰을 뺀 입력 30만 토큰 = $1.20 한 번.
+    expect(view.usage.costUsd).toBeCloseTo(1.2, 2);
+  });
+});
 
 describe('the real SDK on the wire', () => {
   it('sends the documented request shape', async () => {

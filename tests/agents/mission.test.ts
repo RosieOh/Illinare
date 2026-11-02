@@ -463,8 +463,8 @@ describe('taint', () => {
 
 describe('budget', () => {
   it('stops new work once the budget is spent, keeps partial output, and does not synthesize', async () => {
-    await patchSettings({ budgetUsd: 0.001 });
-    const expensive = { input_tokens: 10, output_tokens: 1000 };
+    await patchSettings({ budgetUsd: 0.05 });
+    const expensive = { input_tokens: 10, output_tokens: 3000 };
     const client = new FakeClient((request) => {
       if (request.system === CONDUCTOR_PLAN_SYSTEM) {
         return { message: makeMessage([textBlock(JSON.stringify(planOf([step('a'), step('b', ['a'])])))], 'end_turn', expensive) };
@@ -496,14 +496,13 @@ describe('budget', () => {
   });
 
   it('gives a follow-up its own budget', async () => {
-    // 호출 한 번에 $0.00052. 첫 턴(계획 + 답변)이 끝나면 누적 비용이 상한을 넘는다.
-    await patchSettings({ budgetUsd: 0.001 });
-    const usage = { input_tokens: 30, output_tokens: 20 };
+    // 계획은 싸고 답변이 $0.06이다. 첫 턴(계획 + 답변)이 끝나면 누적 비용이 상한을 넘는다.
+    await patchSettings({ budgetUsd: 0.05 });
     const client = new FakeClient((request) => {
       if (request.system === CONDUCTOR_PLAN_SYSTEM) {
-        return { message: makeMessage([textBlock(JSON.stringify({ title: 't', route: 'answer', rationale: '', steps: [] }))], 'end_turn', usage) };
+        return { message: makeMessage([textBlock(JSON.stringify({ title: 't', route: 'answer', rationale: '', steps: [] }))], 'end_turn', { input_tokens: 30, output_tokens: 20 }) };
       }
-      return { message: makeMessage([textBlock('답')], 'end_turn', usage) };
+      return { message: makeMessage([textBlock('답')], 'end_turn', { input_tokens: 30, output_tokens: 3000 }) };
     });
     use(client);
     const first = await run();

@@ -53,6 +53,15 @@ export function outputUsdPerToken(model: string): number {
   return priceFor(model, 0).output / 1_000_000;
 }
 
+/**
+ * 호출 전 입력 비용 추정. 프롬프트 캐시를 켜 두므로 이미 보낸 앞부분은 캐시 읽기 단가로,
+ * 새로 붙은 뒷부분은 캐시 쓰기 단가로 잡는다. 캐시가 빗나가면 message_start에서 실제 값으로 바로잡힌다.
+ */
+export function estimateInputUsd(model: string, freshTokens: number, cachedTokens: number): number {
+  const p = priceFor(model, freshTokens + cachedTokens);
+  return (freshTokens * p.cacheWrite + cachedTokens * p.cacheRead) / 1_000_000;
+}
+
 interface TokenCounts {
   input_tokens: number;
   output_tokens: number;

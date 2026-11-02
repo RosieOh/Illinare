@@ -134,7 +134,7 @@ export function describeError(err: unknown): { code: MissionErrorCode; message: 
   if (err instanceof BudgetExceededError) {
     return {
       code: 'budget_exceeded',
-      message: `이번 작업의 비용 상한($${err.budgetUsd.toFixed(2)})에 도달해 멈췄어요. 설정에서 상한을 올린 뒤 후속 지시로 이어갈 수 있어요.`,
+      message: `이번 작업의 비용 상한($${err.budgetUsd.toFixed(2)})에 닿았거나 다음 호출이 상한을 넘을 것 같아 멈췄어요. 설정에서 상한을 올린 뒤 후속 지시로 이어갈 수 있어요.`,
     };
   }
   if (err instanceof RefusedError) {

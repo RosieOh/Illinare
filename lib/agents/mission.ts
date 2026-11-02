@@ -257,7 +257,7 @@ class Mission {
     const earlier = formatEarlierTurns(this.view.turns);
     const safeGoal = neutralizeTags(goal);
     const budget = new BudgetGuard(this.view.budgetUsd, () => this.view.usage.costUsd - (this.view.turnStartCostUsd ?? 0));
-    const beforeModelCall = () => budget.acquire(signal);
+    const beforeModelCall: AgentHooks['beforeModelCall'] = (estimate) => budget.acquire(signal, { estimate });
     const conductorModel = modelFor('conductor', settings.modelPreset);
     // 이전 턴의 답변에 외부 내용이 섞였을 수 있고, 에이전트가 저장한 기억은 외부 내용에서 왔을 수 있다.
     // 지휘자가 이 문맥을 읽고 작업 지시를 쓰므로 단계들도 오염 상태로 시작한다.
@@ -410,7 +410,7 @@ class Mission {
             model: modelFor(step.agent, ctx.settings.modelPreset),
             signal,
             emit,
-            beforeModelCall: () => ctx.budget.acquire(signal, Math.min(MAX_CONCURRENT_STEPS, plan.steps.length)),
+            beforeModelCall: (estimate) => ctx.budget.acquire(signal, { estimate, parallelism: Math.min(MAX_CONCURRENT_STEPS, plan.steps.length) }),
             askApproval: (approval) => this.askApproval(approval, emit, signal),
           },
           step,

@@ -387,9 +387,19 @@ describe('budget (security 5)', () => {
     expect(view.status).toBe('failed');
     expect(view.error?.code).toBe('budget_exceeded');
     expect(view.usage.costUsd).toBeGreaterThan(1.8);
-    // 진행 중인 호출은 상한의 110%에서 끊는다.
-    expect(view.usage.costUsd).toBeLessThan(2.35);
+    // 진행 중인 호출은 실제 사용량이 상한을 넘는 순간 끊는다. 동시에 받던 청크만큼만 더 나간다.
+    expect(view.usage.costUsd).toBeLessThan(2.1);
   }, 20_000);
+
+  it('does not start a call whose reservation cannot fit, even with nothing spent', async () => {
+    await patchSettings({ budgetUsd: 0.001 });
+    const client = use(teamClient(planOf([step('a', [], 'writer')])));
+    const view = (await waitForMission(await createMission('써줘'))) as MissionView;
+    expect(view.status).toBe('failed');
+    expect(view.error?.code).toBe('budget_exceeded');
+    expect(client.requests).toHaveLength(0);
+    expect(view.usage.costUsd).toBe(0);
+  });
 
   it('runs one call at a time when under 25% remains', async () => {
     await patchSettings({ budgetUsd: 1 });
@@ -437,7 +447,8 @@ describe('budget (security 5)', () => {
   });
 
   it('never goes below a usable floor', async () => {
-    await patchSettings({ budgetUsd: 0.01 });
+    // 설정에서 고를 수 있는 가장 작은 상한. Opus 출력 $20/MTok로는 2,500토큰어치다.
+    await patchSettings({ budgetUsd: 0.05 });
     const client = use(teamClient(planOf([step('a', [], 'writer')])));
     await waitForMission(await createMission('써줘'));
     const cap = client.requests.find((r) => r.system === SPECIALISTS.writer.system)?.maxTokens;
@@ -705,8 +716,15 @@ describe('follow-ups (lifecycle 17, 18, 20)', () => {
   });
 
   it('measures the budget per turn and exposes the starting cost', async () => {
-    await patchSettings({ budgetUsd: 0.001 });
-    use(answerClient({ input_tokens: 30, output_tokens: 20 }));
+    await patchSettings({ budgetUsd: 0.05 });
+    // 계획은 상한 안에서 끝나고 답변이 상한을 넘긴다.
+    use(
+      new FakeClient((request) =>
+        request.system === CONDUCTOR_PLAN_SYSTEM
+          ? { message: makeMessage([textBlock(JSON.stringify({ title: 't', route: 'answer', rationale: '', steps: [] }))], 'end_turn', { input_tokens: 30, output_tokens: 20 }) }
+          : { message: makeMessage([textBlock('답')], 'end_turn', { input_tokens: 30, output_tokens: 3000 }) }
+      )
+    );
     const first = (await waitForMission(await createMission('질문'))) as MissionView;
     expect(first.turnStartCostUsd).toBe(0);
     expect(first.usage.costUsd).toBeGreaterThan(first.budgetUsd);

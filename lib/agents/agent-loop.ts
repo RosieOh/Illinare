@@ -1,9 +1,9 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import type { UsageTotals } from '@/lib/contracts';
-import type { CallTicket } from './budget';
+import type { CallEstimate, CallTicket } from './budget';
 import { CancelledError, isCancellation, isTransientStreamError, isUnparseableToolInput, RefusedError, TruncatedError, TurnLimitError } from './errors';
 import { textOf, type ContentBlock, type Effort, type LlmClient, type Message, type MessageParam, type StreamEvent, type ToolResultBlockParam, type ToolUnion, type ToolUseBlock } from './llm';
-import { costOf, costOfMessage, outputUsdPerToken } from './pricing';
+import { costOf, costOfMessage, estimateInputUsd, outputUsdPerToken } from './pricing';
 
 const MAX_TURNS = 16;
 const MAX_JSON_RETRIES = 2;
@@ -26,6 +26,30 @@ function budgetedMaxTokens(maxTokens: number, model: string, ticket: CallTicket 
   return Math.min(maxTokens, Math.max(MIN_BUDGETED_TOKENS, affordable));
 }
 
+/** 토큰 수에 들어가지 않거나 크기가 토큰과 무관한 값. 암호화된 값이나 서명을 글자 수로 세면 예약이 크게 부풀어 호출을 막는다. */
+const OPAQUE_FIELDS = new Set(['signature', 'encrypted_content', 'encrypted_index']);
+/** base64 첨부는 글자 수가 아니라 대략 바이트 크기로 잰다. 20MB PDF 하나가 상한을 막으면 안 된다. */
+const ATTACHMENT_BYTES_PER_TOKEN = 64;
+const ATTACHMENT_MAX_TOKENS = 50_000;
+
+/** 요청을 보내기 전의 입력 토큰 추정. 정확할 필요는 없고 message_start가 실제 값을 알려줄 때까지만 쓴다. */
+export function estimateTokens(value: unknown): number {
+  let attachmentTokens = 0;
+  const json = JSON.stringify(value, (key, v: unknown) => {
+    if (OPAQUE_FIELDS.has(key)) return undefined;
+    if (key === 'data' && typeof v === 'string') {
+      attachmentTokens += Math.min(ATTACHMENT_MAX_TOKENS, Math.ceil((v.length * 0.75) / ATTACHMENT_BYTES_PER_TOKEN));
+      return undefined;
+    }
+    return v;
+  });
+  return Math.ceil((json?.length ?? 0) / CHARS_PER_TOKEN) + attachmentTokens;
+}
+
+function promptTokens(usage: Anthropic.Beta.BetaUsage): number {
+  return usage.input_tokens + (usage.cache_read_input_tokens ?? 0) + (usage.cache_creation_input_tokens ?? 0);
+}
+
 function retryDelayMs(): number {
   const value = Number(process.env.ILLIONAIRE_RETRY_DELAY_MS);
   return Number.isFinite(value) && value >= 0 ? value : 1000;
@@ -39,7 +63,7 @@ export interface ServerToolCall {
 
 export interface AgentHooks {
   /** 모델 호출 직전. 예산을 넘었으면 throw 한다. 티켓을 돌려주면 호출이 끝날 때 반납한다. */
-  beforeModelCall: () => void | CallTicket | Promise<void | CallTicket>;
+  beforeModelCall: (estimate: CallEstimate) => void | CallTicket | Promise<void | CallTicket>;
   onUsage: (model: string, delta: UsageTotals) => void;
   onThinking: (delta: string) => void;
   onText: (delta: string) => void;
@@ -204,6 +228,7 @@ class CallMeter {
   private usage: Anthropic.Beta.BetaUsage | null = null;
   private chars = 0;
   private reportedChars = 0;
+  private searches = 0;
 
   constructor(private readonly ticket: CallTicket | undefined) {}
 
@@ -218,6 +243,20 @@ class CallMeter {
     if (this.chars - this.reportedChars >= METER_STEP_CHARS) this.report();
   }
 
+  /** message_delta의 누적 사용량. 값이 없는 필드는 앞선 값을 지키고, 보이지 않던 추론 토큰도 여기서 드러난다. */
+  applyDelta(delta: Partial<Record<keyof Anthropic.Beta.BetaMessageDeltaUsage, unknown>>) {
+    if (!this.usage) return;
+    const known = Object.fromEntries(Object.entries(delta).filter(([, value]) => value !== null && value !== undefined));
+    this.usage = { ...this.usage, ...known };
+    this.report();
+  }
+
+  /** 검색은 건당 요금이 붙는데 호출이 끝나야 집계되므로 시작할 때 세어 둔다. */
+  addSearch() {
+    this.searches++;
+    this.report();
+  }
+
   private report() {
     this.reportedChars = this.chars;
     const estimate = this.estimate();
@@ -228,7 +267,16 @@ class CallMeter {
   estimate(): { model: string; delta: UsageTotals } | null {
     if (!this.model || !this.usage) return null;
     const outputTokens = Math.max(this.usage.output_tokens, Math.ceil(this.chars / CHARS_PER_TOKEN));
-    return { model: this.model, delta: costOf(this.model, { ...this.usage, output_tokens: outputTokens }) };
+    const serverUse = this.usage.server_tool_use;
+    const searches = Math.max(serverUse?.web_search_requests ?? 0, this.searches);
+    return {
+      model: this.model,
+      delta: costOf(this.model, {
+        ...this.usage,
+        output_tokens: outputTokens,
+        server_tool_use: searches > 0 ? { web_fetch_requests: serverUse?.web_fetch_requests ?? 0, web_search_requests: searches } : serverUse,
+      }),
+    };
   }
 }
 
@@ -279,10 +327,19 @@ export async function runAgentLoop(input: AgentRunInput): Promise<AgentRunResult
   /** 마지막으로 비어 있지 않았던 본문. 빈 응답이나 턴 한도일 때 결과로 쓴다. */
   let lastText = '';
   const openServer = new Set<string>();
+  /** 앞선 호출의 실제 입력 토큰. 다음 호출에서 이만큼은 캐시에서 읽힌다. */
+  let lastPrompt: { tokens: number; estimated: number } | null = null;
 
   for (let turn = 0; turn < maxTurns; turn++) {
     if (signal.aborted) throw new CancelledError();
-    const ticket = (await hooks.beforeModelCall()) ?? undefined;
+    const estimated = estimateTokens({ system: input.system, tools: input.tools, format: input.format, messages });
+    const freshTokens = Math.max(0, estimated - (lastPrompt?.estimated ?? 0));
+    const ticket =
+      (await hooks.beforeModelCall({
+        inputUsd: estimateInputUsd(input.model, freshTokens, lastPrompt?.tokens ?? 0),
+        // 호출당 최소 출력(max_tokens 하한)만 예약한다. 나머지는 max_tokens와 실시간 사용량이 묶는다.
+        outputAllowanceUsd: MIN_BUDGETED_TOKENS * outputUsdPerToken(input.model),
+      })) ?? undefined;
 
     const emitted = { text: 0, thinking: 0 };
     const coalescer = new DeltaCoalescer({
@@ -371,6 +428,7 @@ export async function runAgentLoop(input: AgentRunInput): Promise<AgentRunResult
     }
     if (!message) throw new TurnLimitError(lastText);
 
+    lastPrompt = { tokens: promptTokens(message.usage), estimated };
     containerId = message.container?.id ?? containerId;
     if (message.input_transformations?.length) {
       console.warn('[mission] API가 thinking 블록을 처리에서 뺐어요', message.input_transformations);
@@ -441,6 +499,9 @@ function handleEvent(event: StreamEvent, state: AttemptState) {
     case 'message_start':
       meter.start(event.message);
       break;
+    case 'message_delta':
+      meter.applyDelta(event.usage);
+      break;
     case 'content_block_start': {
       const block = event.content_block;
       if (block.type === 'server_tool_use') {
@@ -482,6 +543,7 @@ function handleEvent(event: StreamEvent, state: AttemptState) {
         }
         openServer.add(entry.id);
         startedServer.add(entry.id);
+        if (entry.name === 'web_search') meter.addSearch();
         hooks.onServerToolStart({ id: entry.id, name: entry.name, input: parsed });
       }
       break;
