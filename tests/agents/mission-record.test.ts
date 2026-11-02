@@ -62,7 +62,7 @@ describe('recordedInput', () => {
 
   it('denies by default: a field nobody listed does not survive', () => {
     expect(JSON.stringify(recordedInput({ somethingNew: SECRET }))).not.toContain(SECRET);
-    expect(JSON.stringify(recordedInput({ text: SECRET, body: SECRET, note: SECRET, code: SECRET, title: SECRET }))).not.toContain(SECRET);
+    expect(JSON.stringify(recordedInput({ text: SECRET, body: SECRET, note: SECRET, content: SECRET, title: SECRET }))).not.toContain(SECRET);
   });
 
   it('keeps numbers, booleans and null, which carry no free text', () => {
@@ -261,14 +261,14 @@ describe('a write waiting for approval', () => {
     expect(await everythingOnDisk(id)).not.toContain(SECRET);
   });
 
-  it('keeps search queries and URLs in the record, and hashes sandbox code', async () => {
+  it('keeps search queries, URLs and sandbox code in the record, because the user must see what ran', async () => {
     setClientFactory(() =>
       singleStep('researcher', () => ({
         message: makeMessage([
           serverToolBlock('srv1', 'web_search', { query: '보여야-하는-검색어' }),
           webSearchResultBlock('srv1'),
           serverToolBlock('srv2', 'web_fetch', { url: 'https://example.com/visible' }),
-          serverToolBlock('srv3', 'code_execution', { code: `print("${SECRET}")` }),
+          serverToolBlock('srv3', 'code_execution', { code: 'print("보여야-하는-코드")' }),
           textBlock('끝'),
         ]),
       }))
@@ -278,7 +278,7 @@ describe('a write waiting for approval', () => {
     const log = await fs.readFile(logFile(id), 'utf8');
     expect(log).toContain('보여야-하는-검색어');
     expect(log).toContain('https://example.com/visible');
-    expect(log).not.toContain(SECRET);
+    expect(log).toContain('보여야-하는-코드');
   });
 
   describe('across a restart', () => {

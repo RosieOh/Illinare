@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, promises as fs, realpathSync, rmSync } from 'no
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { appendAudit, listAudit, markUndone } from '@/lib/store/audit';
+import { appendAudit, getStoredAudit, listAudit, markUndone } from '@/lib/store/audit';
 import { addDeck, listDecks, parseSlides, removeDeck } from '@/lib/store/decks';
 import { addEvent, listEvents, patchEvent, removeEvent } from '@/lib/store/events';
 import { captureBefore, commitJournal, restoreJournal } from '@/lib/store/journal';
@@ -206,6 +206,35 @@ describe('audit', () => {
     expect(after[1].undoneAt).toBeGreaterThan(0);
     expect(await listAudit({ limit: 1 })).toHaveLength(1);
   });
+
+  it('keeps every action when the log grows past its size limit', async () => {
+    const entry = (tool: string) => appendAudit({ missionId: 'rotate', tool, summary: 's', risk: 'safe', status: 'ok', approvedBy: 'auto', journalId: 'j' });
+    const grow = () => fs.appendFile(dataPath('audit.jsonl'), `${JSON.stringify({ pad: 'x'.repeat(8 * 1024 * 1024) })}\n`);
+
+    const oldest = await entry('oldest');
+    await grow();
+    const middle = await entry('middle');
+    await new Promise((r) => setTimeout(r, 2));
+    await grow();
+    const newest = await entry('newest');
+
+    const archives = (await fs.readdir(dataDir())).filter((name) => /^audit\.\d+\.jsonl$/.test(name));
+    expect(archives.length).toBeGreaterThanOrEqual(2);
+    const listed = await listAudit({ missionId: 'rotate' });
+    expect(listed.map((e) => e.tool)).toEqual(['newest', 'middle', 'oldest']);
+    expect(await getStoredAudit(oldest.id)).toMatchObject({ tool: 'oldest', journalId: 'j' });
+
+    // 되돌리기 기록은 새 파일에 쓰이지만 보관된 원래 기록에 적용되어야 한다.
+    await markUndone(oldest.id);
+    const after = await listAudit({ missionId: 'rotate' });
+    expect(after[2].undoneAt).toBeGreaterThan(0);
+    expect(after[2].undoable).toBe(false);
+    expect((await getStoredAudit(oldest.id))?.undoneAt).toBeGreaterThan(0);
+
+    // 최근 항목만 필요하면 오래된 파일까지 내려가지 않아도 순서가 같다.
+    expect((await listAudit({ limit: 1 }))[0].id).toBe(newest.id);
+    expect(middle.tool).toBe('middle');
+  }, 60000);
 });
 
 describe('journal', () => {

@@ -216,7 +216,7 @@ export function AiSection() {
 
       <Group
         title="미션 비용 상한"
-        description="미션 하나가 이 금액에 닿으면 새 작업을 멈춰요. 모델을 호출하기 직전에 확인하므로 이미 진행 중인 호출 때문에 조금 넘을 수 있어요."
+        description="미션 하나가 이 금액에 가까워지면 새 호출을 시작하지 않고, 닿으면 진행 중인 호출도 끊어요. 비용은 호출이 끝나야 정확히 알 수 있어 조금 넘을 수 있어요."
       >
         <div className="flex flex-wrap items-start gap-4">
           <input

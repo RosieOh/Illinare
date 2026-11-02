@@ -71,13 +71,16 @@ export function formatEarlierTurns(turns: MissionTurn[]): string {
 
 /**
  * 미션 기록에 그대로 남겨도 되는 입력 필드. 어디를 건드렸는지 알려주는 식별자만 둔다.
- * 나머지 글(쓰기 내용, 클립보드, 코드 등)은 새 도구를 포함해 기본적으로 길이와 해시만 남는다.
+ * 나머지 글(쓰기 내용, 클립보드 등)은 새 도구를 포함해 기본적으로 길이와 해시만 남는다.
  * query와 url은 기기 밖으로 나간 값이라 사용자가 볼 수 있어야 한다.
+ * code와 command는 샌드박스에서 무엇이 돌았는지 보여 주는 값이다. 과정을 그대로 보여 주는 것이 제품의 약속이므로 남긴다.
  */
 const RECORDED_FIELDS = new Set([
   'path',
   'query',
   'url',
+  'code',
+  'command',
   'name',
   'filename',
   'city',

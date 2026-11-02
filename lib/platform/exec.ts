@@ -75,6 +75,8 @@ export function runWithStdin(bin: string, args: string[], input: string, timeout
       if (code === 0) resolve();
       else reject(new Error(stderr.trim() || `${bin} 종료 코드 ${code}`));
     });
+    // 자식이 입력을 다 읽기 전에 끝나면 EPIPE가 난다. 처리기가 없으면 서버 전체가 죽는다. 결과는 close에서 판단한다.
+    child.stdin.on('error', () => undefined);
     child.stdin.end(input);
   });
 }
