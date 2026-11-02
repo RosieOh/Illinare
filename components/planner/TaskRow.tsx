@@ -187,7 +187,7 @@ export function TaskRow({ task, today, compact, onToggle, onPatch, onRemove, onO
       )}
 
       {!compact && onPatch && onRemove && !editing && (
-        <div className="material-thick absolute top-1 right-1 flex items-center gap-0.5 !rounded-[11px] opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:static [@media(hover:none)]:basis-full [@media(hover:none)]:justify-end [@media(hover:none)]:!bg-transparent [@media(hover:none)]:opacity-100 [@media(hover:none)]:!shadow-none">
+        <div className="absolute top-1 right-1 flex items-center gap-0.5 rounded-[11px] bg-[var(--surface-2)] opacity-0 shadow-[0_1px_4px_rgba(0,20,60,.16),inset_0_0_0_0.5px_var(--mat-hairline)] transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:static [@media(hover:none)]:basis-full [@media(hover:none)]:justify-end [@media(hover:none)]:!bg-transparent [@media(hover:none)]:opacity-100 [@media(hover:none)]:!shadow-none">
           {!task.due && (
             <DuePicker value={task.due} onChange={(value) => onPatch({ due: value })} label={`${task.text} 기한 정하기`} className="size-8 justify-center rounded-[10px] text-label-2 hover:bg-fill-3 hover:text-label">
               <Tooltip content="기한 정하기">

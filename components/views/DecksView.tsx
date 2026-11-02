@@ -276,7 +276,7 @@ export default function DecksView({ active }: ViewProps) {
               <li key={deck.id}>
                 <button
                   type="button"
-                  className="material-regular block w-full rounded-[22px] p-2.5 text-left outline-none transition-transform duration-150 hover:scale-[1.01] focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                  className="material block w-full rounded-[22px] p-2.5 text-left outline-none transition-transform duration-150 hover:scale-[1.01] focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
                   onClick={() => setSelectedId(deck.id)}
                 >
                   {deck.slides[0] ? (

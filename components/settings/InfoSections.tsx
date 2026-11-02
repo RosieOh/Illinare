@@ -221,7 +221,7 @@ export function AboutSection() {
           <dd className="text-label">{bootstrap?.desktop ? '데스크톱 앱' : '브라우저'}</dd>
           <dt className="text-label-2">라이선스</dt>
           <dd className="flex flex-wrap items-center gap-2 text-label">
-            <Badge tone="warning">미정</Badge>
+            <Badge tone="neutral">미정</Badge>
             <span className="text-label-2">출시 전에 소유자가 채울 항목이에요.</span>
           </dd>
         </dl>
