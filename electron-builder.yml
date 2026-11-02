@@ -1,0 +1,60 @@
+# 이름은 lib/contracts.ts의 BRAND와 맞춘다. 실행 파일과 폴더는 영문, 사용자에게 보이는 바로가기는 한글이다.
+appId: com.illionaire.desktop
+productName: Illionaire
+copyright: Copyright © 2026 Illionaire
+
+directories:
+  output: build/desktop
+  buildResources: electron/assets
+
+# 메인 프로세스는 npm 의존성이 없다. Next 서버는 아래 extraResources로 따로 싣는다.
+files:
+  - electron/**/*
+  - package.json
+  - "!**/node_modules/**"
+npmRebuild: false
+nodeGypRebuild: false
+asar: true
+
+# Next standalone은 일반 파일 시스템에서 읽으므로 asar 밖에 둔다. scripts/desktop-prepare.mjs가 먼저 돌아야 한다.
+extraResources:
+  - from: .next/desktop-stage
+    to: .
+    filter:
+      - "**/*"
+
+# 외부 도구가 앱 프로세스를 Node로 재사용하거나 임의 코드를 주입하지 못하게 한다.
+electronFuses:
+  runAsNode: false
+  enableNodeOptionsEnvironmentVariable: false
+  enableNodeCliInspectArguments: false
+  enableCookieEncryption: true
+  enableEmbeddedAsarIntegrityValidation: true
+  onlyLoadAppFromAsar: true
+  grantFileProtocolExtraPrivileges: false
+
+win:
+  target: nsis
+  icon: electron/assets/icon.png
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  shortcutName: 일리네어
+  installerLanguages:
+    - ko_KR
+  language: "1042"
+
+mac:
+  target: dmg
+  icon: electron/assets/icon.png
+  category: public.app-category.productivity
+  extendInfo:
+    NSCameraUsageDescription: 손 제스처 인식에 카메라를 사용해요. 영상은 기기 밖으로 나가지 않아요.
+    NSMicrophoneUsageDescription: 음성 입력에 마이크를 사용해요.
+
+linux:
+  target: AppImage
+  icon: electron/assets/icon.png
+  category: Utility

@@ -1,0 +1,29 @@
+/* 데스크톱 창 전용. 메인 프로세스가 insertCSS로 넣는다. */
+
+/* 창을 끌 수 있는 상단 띠. 아일랜드와 같은 높이까지 넓힌다. */
+html[data-desktop] .app-drag {
+  height: calc(var(--gutter) + var(--island-h));
+}
+
+/* 띠 위에 겹치는 컨트롤은 클릭을 받아야 한다. */
+html[data-desktop] .rail,
+html[data-desktop] .island-anchor > *,
+html[data-desktop] .composer-anchor > *,
+html[data-desktop] [role='dialog'],
+html[data-desktop] [role='menu'],
+html[data-desktop] [role='listbox'],
+html[data-desktop] [role='tooltip'],
+html[data-desktop] button,
+html[data-desktop] a,
+html[data-desktop] input,
+html[data-desktop] textarea,
+html[data-desktop] select,
+html[data-desktop] [role='button'],
+html[data-desktop] [tabindex] {
+  -webkit-app-region: no-drag;
+}
+
+/* macOS 신호등 버튼이 레일 왼쪽 위에 놓이므로 그만큼 내린다. */
+html[data-desktop][data-platform='darwin'] .rail {
+  top: calc(var(--gutter) + 28px);
+}
