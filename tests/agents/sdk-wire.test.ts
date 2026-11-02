@@ -7,6 +7,7 @@ import { BudgetExceededError, describeError } from '@/lib/agents/errors';
 import { createClient, type ToolResultBlockParam, type ToolUseBlock } from '@/lib/agents/llm';
 import { createMission, resetMissionRegistryForTests, waitForMission } from '@/lib/agents/mission';
 import { CONDUCTOR_PLAN_SYSTEM, CONDUCTOR_SYNTH_SYSTEM, SPECIALISTS } from '@/lib/agents/roster';
+import { listAudit } from '@/lib/store/audit';
 import { dataPath, writeJson } from '@/lib/store/json';
 import { patchSettings } from '@/lib/store/settings';
 import { validateInput } from '@/lib/tools/validate';
@@ -285,6 +286,43 @@ describe('the cost cap on the wire', () => {
     expect(view.error?.code).toBe('budget_exceeded');
     // 계획 호출의 몇 토큰을 뺀 입력 30만 토큰 = $1.20 한 번.
     expect(view.usage.costUsd).toBeCloseTo(1.2, 2);
+  });
+});
+
+describe('web calls through the real SDK stream', () => {
+  it('records a call nested in code execution, as the docs describe it, from the SDK events', async () => {
+    const plan = { title: '조사', route: 'team', rationale: '', steps: [{ id: 's1', agent: 'researcher', title: '조사', task: '찾아줘', dependsOn: [] }] };
+    const caller = { type: 'code_execution_20260120', tool_id: 'srvtoolu_code' };
+    responder = (body) =>
+      body.system === CONDUCTOR_PLAN_SYSTEM
+        ? { sse: textTurn(JSON.stringify(plan)) }
+        : {
+            sse: [
+              messageStart(),
+              ...serverUseEvents(0, 'srvtoolu_code', 'code_execution', '{"code":"print(1)"}'),
+              { type: 'content_block_start', index: 1, content_block: { type: 'server_tool_use', id: 'srvtoolu_nested', name: 'web_search', input: {}, caller } },
+              { type: 'content_block_delta', index: 1, delta: { type: 'input_json_delta', partial_json: '{"query":"중첩된 검색어"}' } },
+              { type: 'content_block_stop', index: 1 },
+              {
+                type: 'content_block_start',
+                index: 2,
+                content_block: { type: 'web_search_tool_result', tool_use_id: 'srvtoolu_nested', caller, content: [{ type: 'web_search_result', title: 'T', url: 'https://example.com/r', encrypted_content: 'x', page_age: null }] },
+              },
+              { type: 'content_block_stop', index: 2 },
+              { type: 'content_block_start', index: 3, content_block: { type: 'text', text: '' } },
+              { type: 'content_block_delta', index: 3, delta: { type: 'text_delta', text: '찾았어요' } },
+              { type: 'content_block_stop', index: 3 },
+              ...messageEnd('end_turn'),
+            ],
+          };
+    const id = await createMission('찾아줘');
+    const view = (await waitForMission(id)) as MissionView;
+    expect(view.status).toBe('done');
+    const nested = view.steps.s1.toolCalls.find((c) => c.callId === 'srvtoolu_nested');
+    expect(nested).toMatchObject({ name: 'web_search', input: { query: '중첩된 검색어' }, status: 'ok' });
+    expect(nested?.result).toContain('https://example.com/r');
+    expect(view.steps.s1.tainted).toBe(true);
+    await waitUntil(async () => (await listAudit({ missionId: id })).some((e) => e.summary.includes('중첩된 검색어')), '감사 기록');
   });
 });
 

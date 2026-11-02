@@ -72,6 +72,8 @@ export interface AgentHooks {
   onActivity: (activity: string) => void;
   onServerToolStart: (call: ServerToolCall) => void;
   onServerToolFinish: (id: string, ok: boolean, result: string) => void;
+  /** API가 보고한 사용량이 응답에 담긴 호출보다 많다. 내용을 볼 수 없는 웹 호출이 있었다는 뜻이다. */
+  onUnseenServerCalls?: (name: string, count: number) => void;
   /** 한 턴의 클라이언트 도구를 실행하고 같은 순서로 tool_result를 돌려준다. */
   runClientTools: (blocks: ToolUseBlock[]) => Promise<ToolResultBlockParam[]>;
 }
@@ -280,15 +282,81 @@ class CallMeter {
   }
 }
 
+interface PendingServerCall {
+  id: string;
+  name: string;
+  json: string;
+  /** 시작 이벤트에 이미 담겨 온 입력 */
+  initial: unknown;
+}
+
 interface AttemptState {
   coalescer: DeltaCoalescer;
   meter: CallMeter;
-  pendingServer: Map<number, { id: string; name: string; json: string }>;
+  pendingServer: Map<number, PendingServerCall>;
   /** 턴을 넘어 열려 있는 서버 도구 (pause_turn 후 결과가 다음 턴에 올 수 있다) */
   openServer: Set<string>;
   /** 이번 시도에서 시작한 서버 도구 */
   startedServer: Set<string>;
+  /** 이 실행에서 이미 알린 서버 도구. 스트림과 최종 메시지에 모두 나오므로 두 번 기록하지 않는다. */
+  announcedServer: Set<string>;
   hooks: AgentHooks;
+}
+
+/** 입력을 해석하지 못해도 검색어와 주소가 기록에서 사라지면 안 되므로 받은 글자를 그대로 남긴다. */
+function serverCallInput(call: PendingServerCall): unknown {
+  if (!call.json) return call.initial ?? {};
+  try {
+    return JSON.parse(call.json);
+  } catch {
+    const field = call.name === 'web_search' ? 'query' : call.name === 'web_fetch' ? 'url' : 'code';
+    return { [field]: call.json };
+  }
+}
+
+function announceServerCall(state: AttemptState, id: string, name: string, input: unknown) {
+  if (state.announcedServer.has(id)) return;
+  state.announcedServer.add(id);
+  state.openServer.add(id);
+  state.startedServer.add(id);
+  if (name === 'web_search') state.meter.addSearch();
+  state.hooks.onServerToolStart({ id, name, input });
+}
+
+const UNKNOWN_OUTCOME = '응답이 끊겨 이 요청이 서버에서 실행됐는지 알 수 없어요.';
+
+/** 입력을 받는 도중 끊긴 호출. 서버는 이미 실행했을 수 있으므로 받은 데까지 기록을 남긴다. */
+function recordCutOffServerCalls(state: AttemptState) {
+  for (const call of state.pendingServer.values()) {
+    announceServerCall(state, call.id, call.name, serverCallInput(call));
+    state.openServer.delete(call.id);
+    state.hooks.onServerToolFinish(call.id, false, UNKNOWN_OUTCOME);
+  }
+  state.pendingServer.clear();
+}
+
+/**
+ * 스트림에서 보지 못한 서버 도구를 최종 메시지로 채운다. 동적 필터링의 중첩 호출도 문서상 같은 블록으로 온다.
+ * 응답에 없는데 사용량에만 잡힌 호출은 내용을 알 수 없으니 그런 호출이 있었다는 사실만 알린다.
+ */
+function reconcileServerCalls(message: Message, state: AttemptState) {
+  for (const block of message.content) {
+    if (block.type === 'server_tool_use') announceServerCall(state, block.id, block.name, block.input);
+  }
+  for (const block of message.content) {
+    if (isServerResult(block) && state.openServer.delete(block.tool_use_id)) {
+      const { ok, text } = describeServerResult(block);
+      state.hooks.onServerToolFinish(block.tool_use_id, ok, text);
+    }
+  }
+  const reported = message.usage.server_tool_use;
+  for (const [name, count] of [
+    ['web_search', reported?.web_search_requests ?? 0],
+    ['web_fetch', reported?.web_fetch_requests ?? 0],
+  ] as const) {
+    const seen = message.content.filter((b) => b.type === 'server_tool_use' && b.name === name).length;
+    if (count > seen) state.hooks.onUnseenServerCalls?.(name, count - seen);
+  }
 }
 
 function abortableDelay(ms: number, signal: AbortSignal): Promise<void> {
@@ -327,6 +395,7 @@ export async function runAgentLoop(input: AgentRunInput): Promise<AgentRunResult
   /** 마지막으로 비어 있지 않았던 본문. 빈 응답이나 턴 한도일 때 결과로 쓴다. */
   let lastText = '';
   const openServer = new Set<string>();
+  const announcedServer = new Set<string>();
   /** 앞선 호출의 실제 입력 토큰. 다음 호출에서 이만큼은 캐시에서 읽힌다. */
   let lastPrompt: { tokens: number; estimated: number } | null = null;
 
@@ -358,6 +427,7 @@ export async function runAgentLoop(input: AgentRunInput): Promise<AgentRunResult
       pendingServer: new Map(),
       openServer,
       startedServer: new Set(),
+      announcedServer,
       hooks,
     };
     /** 이번 시도가 내보낸 것을 지운다. 다음 시도의 본문과 이어 붙지 않게 한다. */
@@ -365,7 +435,7 @@ export async function runAgentLoop(input: AgentRunInput): Promise<AgentRunResult
       coalescer.flush();
       if (emitted.text > 0 || emitted.thinking > 0) hooks.onRollback?.(emitted);
       for (const id of state.startedServer) {
-        if (openServer.delete(id)) hooks.onServerToolFinish(id, false, '호출을 다시 시도해 취소됐어요.');
+        if (openServer.delete(id)) hooks.onServerToolFinish(id, false, UNKNOWN_OUTCOME);
       }
     };
 
@@ -395,6 +465,7 @@ export async function runAgentLoop(input: AgentRunInput): Promise<AgentRunResult
         transientRetries = 0;
       } catch (err) {
         coalescer.flush();
+        recordCutOffServerCalls(state);
         // finalMessage를 받지 못해도 생성된 만큼은 청구되므로 추정치라도 기록한다.
         const partial = state.meter.estimate();
         if (partial) hooks.onUsage(partial.model, partial.delta);
@@ -416,6 +487,7 @@ export async function runAgentLoop(input: AgentRunInput): Promise<AgentRunResult
       }
       if (message) {
         coalescer.flush();
+        reconcileServerCalls(message, state);
         hooks.onUsage(message.model, costOfMessage(message));
       }
     } finally {
@@ -494,7 +566,7 @@ export async function runAgentLoop(input: AgentRunInput): Promise<AgentRunResult
 }
 
 function handleEvent(event: StreamEvent, state: AttemptState) {
-  const { coalescer, meter, pendingServer, openServer, startedServer, hooks } = state;
+  const { coalescer, meter, pendingServer, openServer, hooks } = state;
   switch (event.type) {
     case 'message_start':
       meter.start(event.message);
@@ -506,7 +578,7 @@ function handleEvent(event: StreamEvent, state: AttemptState) {
       const block = event.content_block;
       if (block.type === 'server_tool_use') {
         coalescer.flush();
-        pendingServer.set(event.index, { id: block.id, name: block.name, json: '' });
+        pendingServer.set(event.index, { id: block.id, name: block.name, json: '', initial: block.input });
         hooks.onActivity(serverToolActivity(block.name));
       } else if (isServerResult(block)) {
         coalescer.flush();
@@ -535,16 +607,7 @@ function handleEvent(event: StreamEvent, state: AttemptState) {
       const entry = pendingServer.get(event.index);
       if (entry) {
         pendingServer.delete(event.index);
-        let parsed: unknown = {};
-        try {
-          parsed = entry.json ? JSON.parse(entry.json) : {};
-        } catch {
-          parsed = {};
-        }
-        openServer.add(entry.id);
-        startedServer.add(entry.id);
-        if (entry.name === 'web_search') meter.addSearch();
-        hooks.onServerToolStart({ id: entry.id, name: entry.name, input: parsed });
+        announceServerCall(state, entry.id, entry.name, serverCallInput(entry));
       }
       break;
     }

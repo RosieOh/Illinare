@@ -15,6 +15,7 @@ import { newId } from '@/lib/store/json';
 import { anthropicToolsFor } from '@/lib/tools/anthropic';
 import { executeTool, recordDenied } from '@/lib/tools/execute';
 import { effectiveRisk, gate } from '@/lib/tools/policy';
+import { displaySummary } from '@/lib/tools/display';
 import { getTool, type ToolContext, type ToolDef } from '@/lib/tools/registry';
 import { validateInput } from '@/lib/tools/validate';
 import { runAgentLoop, type AgentHooks } from './agent-loop';
@@ -92,10 +93,11 @@ function safeRecordSummary(tool: ToolDef<unknown>, input: unknown): string {
   }
 }
 
+/** 사용자가 웹 호출을 믿고 볼 수 있는 곳이 여기뿐이다. 주소 속 보이지 않는 문자도 드러낸다. */
 function serverToolSummary(name: string, input: unknown): string {
   const i = (input ?? {}) as { query?: string; url?: string };
-  if (name === 'web_search' && i.query) return `웹 검색: ${i.query}`;
-  if (name === 'web_fetch' && i.url) return `웹 페이지 읽기: ${i.url}`;
+  if (name === 'web_search' && i.query) return displaySummary(`웹 검색: ${i.query}`);
+  if (name === 'web_fetch' && i.url) return displaySummary(`웹 페이지 읽기: ${i.url}`);
   if (name === 'web_search') return '웹 검색';
   if (name === 'web_fetch') return '웹 페이지 읽기';
   return '샌드박스 코드 실행';
@@ -112,7 +114,7 @@ export async function runStep(env: StepEnv, step: PlanStep, options: StepOptions
   const profile = SPECIALISTS[agent];
   let tainted = options.tainted;
   let ranTool = false;
-  const serverCalls = new Map<string, string>();
+  const serverCalls = new Map<string, { name: string; summary: string }>();
 
   const markTainted = () => {
     if (tainted) return;
@@ -128,7 +130,7 @@ export async function runStep(env: StepEnv, step: PlanStep, options: StepOptions
   };
 
   /** 서버 측 도구와 웹 접근 승인은 executeTool을 거치지 않으므로 여기서 감사 기록을 남긴다. */
-  const audit = async (entry: Pick<AuditEntry, 'tool' | 'summary' | 'risk' | 'status' | 'approvedBy'>) => {
+  const audit = async (entry: Pick<AuditEntry, 'tool' | 'summary' | 'risk' | 'status' | 'approvedBy' | 'result'>) => {
     try {
       await appendAudit({ ...entry, missionId: env.missionId, agent, tainted: tainted || undefined });
     } catch (err) {
@@ -344,15 +346,28 @@ export async function runStep(env: StepEnv, step: PlanStep, options: StepOptions
       onActivity: (activity) => emit({ type: 'step.activity', stepId: step.id, activity }),
       onServerToolStart: ({ id, name, input }) => {
         const summary = serverToolSummary(name, input);
-        serverCalls.set(id, summary);
+        serverCalls.set(id, { name, summary });
         startCall(id, name, summary, input, 'safe', true);
         if (UNTRUSTED_SERVER_TOOLS.includes(name)) markTainted();
         void audit({ tool: name, summary, risk: 'safe', status: 'ok', approvedBy: webApproved ? 'user' : 'auto' });
       },
       onServerToolFinish: (id, ok, text) => {
-        if (!serverCalls.delete(id)) return;
+        const call = serverCalls.get(id);
+        if (!call) return;
+        serverCalls.delete(id);
         if (ok) ranTool = true;
         finishCall(id, ok ? 'ok' : 'error', text);
+        // 시작할 때 남긴 기록은 요청이 나갔다는 뜻이다. 실패는 따로 적어 감사 기록만 보고도 알 수 있게 한다.
+        if (!ok) void audit({ tool: call.name, summary: call.summary, risk: 'safe', status: 'error', approvedBy: webApproved ? 'user' : 'auto', result: text.slice(0, 300) });
+      },
+      onUnseenServerCalls: (name, count) => {
+        void audit({
+          tool: name,
+          summary: `응답에 담기지 않은 ${name} 호출 ${count}건 (API 사용량 기준). 검색어나 주소를 알 수 없어요.`,
+          risk: 'safe',
+          status: 'error',
+          approvedBy: webApproved ? 'user' : 'auto',
+        });
       },
       runClientTools,
     },
