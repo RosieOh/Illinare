@@ -1,6 +1,6 @@
 import './index';
 import type { Settings, ToolInfo, ToolPolicy, ToolRisk } from '@/lib/contracts';
-import { isAvailable, listTools, type ToolDef } from './registry';
+import { isAvailable, listTools, targetsHardLink, type ToolDef } from './registry';
 
 export interface GateResult {
   action: 'run' | 'ask' | 'block';
@@ -32,9 +32,12 @@ export function effectiveRisk(tool: ToolDef<unknown>, input?: unknown): ToolRisk
 const TAINT_REASON =
   '에이전트가 파일이나 웹처럼 외부에서 온 내용을 읽은 뒤 요청한 작업이에요. 그 내용에 숨은 지시일 수 있어 먼저 확인해요.';
 
+const HARD_LINK_REASON =
+  '이 파일은 하드 링크예요. 다른 경로의 파일과 내용을 공유해서, 경로만 보고는 무엇을 건드리는지 알 수 없어요. 항상 허용으로 설정했어도 먼저 확인해요.';
+
 /**
  * 승인 판단.
- * 순서: 차단 정책 → danger는 항상 확인 → 오염 + 외부 전송이나 부수효과는 항상 확인 → 'ask' 정책
+ * 순서: 차단 정책 → 하드 링크는 항상 확인 → danger는 항상 확인 → 오염 + 외부 전송이나 부수효과는 항상 확인 → 'ask' 정책
  * → confirm은 확인('allow'는 오염되지 않았을 때만 통한다) → safe는 실행.
  * 'allow'는 사용자가 직접 시킨 일을 위한 것이다. 에이전트가 외부 내용을 읽은 뒤에는 그 지시가 사용자의 것인지 알 수 없다.
  */
@@ -42,6 +45,9 @@ export function gate(tool: ToolDef<unknown>, opts: GateOptions): GateResult {
   const policy: ToolPolicy = opts.settings.toolPolicies[tool.name] ?? 'default';
   if (policy === 'block') {
     return { action: 'block', reason: '설정에서 이 도구를 차단했어요.' };
+  }
+  if (targetsHardLink(tool, opts.input)) {
+    return { action: 'ask', reason: HARD_LINK_REASON };
   }
 
   const risk = effectiveRisk(tool, opts.input);

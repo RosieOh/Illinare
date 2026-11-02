@@ -18,6 +18,7 @@ register<{ name: string; content: string }>({
   group: 'docs',
   agents: ['writer'],
   sideEffect: true,
+  targetPath: ({ name }) => noteFile(name),
   schema: {
     type: 'object',
     properties: {

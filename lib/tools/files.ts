@@ -143,6 +143,7 @@ register<{ path: string }>({
   agents: [...AGENTS],
   readsUntrusted: true,
   riskFor: ({ path }) => (isCommonFolder(path) ? 'safe' : 'confirm'),
+  targetPath: ({ path }) => path,
   schema: {
     type: 'object',
     properties: { path: { type: 'string', maxLength: 1000 } },
@@ -281,6 +282,7 @@ register<{ path: string; content: string }>({
   risk: 'confirm',
   group: 'files',
   agents: [...AGENTS],
+  targetPath: ({ path }) => path,
   schema: {
     type: 'object',
     properties: {
@@ -327,6 +329,7 @@ register<{ path: string; content: string }>({
   risk: 'confirm',
   group: 'files',
   agents: [...AGENTS],
+  targetPath: ({ path }) => path,
   schema: {
     type: 'object',
     properties: {
@@ -366,6 +369,7 @@ register<{ path: string }>({
   group: 'files',
   agents: [...AGENTS],
   available: () => getPlatform().has('trash'),
+  targetPath: ({ path }) => path,
   schema: {
     type: 'object',
     properties: { path: { type: 'string', maxLength: 1000 } },

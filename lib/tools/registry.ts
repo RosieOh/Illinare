@@ -1,5 +1,6 @@
 import type { AgentId, ApprovalPreview, MissionArtifact, ToolInfo, ToolRisk } from '@/lib/contracts';
 import { displayPreview, displaySummary } from './display';
+import { isHardLink } from './paths';
 
 /**
  * Tool registry — Claude tool-use 스키마 + 위험 등급 + 핸들러.
@@ -57,16 +58,32 @@ export interface ToolDef<I = unknown> {
   riskFor?: (input: I) => ToolRisk;
   /** 위험 등급이 safe여도 사용자에게 보이는 흔적을 남긴다 (알림, 할 일, 문서 등). 오염 상태에서는 승인 필요. */
   sideEffect?: boolean;
+  /** 이 호출이 읽거나 쓸 파일. 하드 링크이면 설정과 무관하게 승인을 받고 요약에 그 사실을 적는다. */
+  targetPath?: (input: I) => string;
 }
 
 const REGISTRY = new Map<string, ToolDef<unknown>>();
+
+const HARD_LINK_NOTE = '하드 링크: 다른 경로의 파일과 내용을 공유해요';
+
+/** 입력이 잘못되어 경로를 구할 수 없으면 false다. 실행 단계에서 오류로 알린다. */
+export function targetsHardLink<T>(tool: Pick<ToolDef<T>, 'targetPath'>, input: T): boolean {
+  try {
+    return tool.targetPath ? isHardLink(tool.targetPath(input)) : false;
+  } catch {
+    return false;
+  }
+}
 
 /** 모든 도구의 요약과 미리보기는 보이지 않는 문자를 드러낸 뒤에 나간다. */
 export function register<T>(def: ToolDef<T>) {
   const { summarize, preview } = def;
   const shown: ToolDef<T> = {
     ...def,
-    summarize: (input) => displaySummary(summarize(input)),
+    summarize: (input) => {
+      const text = summarize(input);
+      return displaySummary(targetsHardLink(def, input) ? `${text} (${HARD_LINK_NOTE})` : text);
+    },
     preview: preview
       ? async (input) => {
           const result = await preview(input);

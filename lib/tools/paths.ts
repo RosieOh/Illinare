@@ -1,4 +1,4 @@
-import { existsSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
+import { existsSync, lstatSync, readdirSync, realpathSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'node:path';
 import { appRootDir, dataDir } from '@/lib/store/json';
@@ -268,6 +268,86 @@ function expandHome(input: string, home: string): string {
 }
 
 /**
+ * 하드 링크는 이름만 다른 같은 파일이라 경로 검사로는 구분되지 않는다.
+ * 링크 수가 2 이상인 일반 파일만 장치와 아이노드로 보호 대상과 비교한다.
+ * Windows의 아이노드는 2^53을 넘어 Number로 읽으면 서로 다른 파일이 같아질 수 있으므로 bigint로 읽는다.
+ */
+function fileIdentity(real: string): { id: string; linked: boolean } | null {
+  try {
+    const stat = statSync(real, { bigint: true });
+    return stat.isFile() ? { id: `${stat.dev}:${stat.ino}`, linked: Number(stat.nlink) > 1 } : null;
+  } catch {
+    return null;
+  }
+}
+
+/** 쓰면 코드가 실행되는 잘 알려진 자리. 쓰기 규칙은 경로로 막지만 하드 링크는 경로가 다르다. */
+const CODE_RUNNING_TARGETS = [
+  '.bashrc',
+  '.bash_profile',
+  '.bash_login',
+  '.profile',
+  '.zshrc',
+  '.zprofile',
+  '.zshenv',
+  '.gitconfig',
+  '.config/git',
+  '.config/fish',
+  '.config/autostart',
+  '.claude/settings.json',
+  'Library/LaunchAgents',
+  'Documents/PowerShell',
+  'Documents/WindowsPowerShell',
+  'AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Startup',
+];
+
+/** 보호 대상을 훑는 한도. 하드 링크를 만났을 때만 돌지만 경로 검사는 동기라 오래 걸리면 안 된다. */
+const INODE_SCAN_DEPTH = 3;
+const INODE_SCAN_ENTRIES = 2000;
+const INODE_CACHE_MS = 3000;
+
+function collectInodes(root: string, into: Set<string>) {
+  const queue: [string, number][] = [[root, 0]];
+  let visited = 0;
+  for (let i = 0; i < queue.length && visited < INODE_SCAN_ENTRIES; i++) {
+    const [cur, depth] = queue[i];
+    visited++;
+    try {
+      const stat = statSync(cur, { bigint: true });
+      if (stat.isFile()) into.add(`${stat.dev}:${stat.ino}`);
+      else if (stat.isDirectory() && depth < INODE_SCAN_DEPTH) {
+        for (const name of readdirSync(cur)) queue.push([path.join(cur, name), depth + 1]);
+      }
+    } catch {
+      /* 없거나 읽을 수 없는 항목 */
+    }
+  }
+}
+
+let inodeCache: { key: string; at: number; ids: Set<string> } | null = null;
+
+/** 지금 존재하는 보호 대상의 장치+아이노드. 앱 자신의 데이터(secrets.json 포함)를 가장 먼저 본다. */
+function protectedInodes(): Set<string> {
+  const home = homedir();
+  const key = `${home}|${dataDir()}`;
+  if (inodeCache && inodeCache.key === key && Date.now() - inodeCache.at < INODE_CACHE_MS) return inodeCache.ids;
+  const ids = new Set<string>();
+  for (const root of [
+    dataDir(),
+    appRootDir(),
+    ...[...BLOCKED_NAMES, ...BLOCKED_PREFIXES, ...CODE_RUNNING_TARGETS].map((rel) => path.join(home, rel)),
+  ]) {
+    collectInodes(root, ids);
+  }
+  inodeCache = { key, at: Date.now(), ids };
+  return ids;
+}
+
+export function resetProtectedInodesForTests() {
+  inodeCache = null;
+}
+
+/**
  * 사용자가 준 경로를 실제 경로로 바꾼다. 허용되지 않으면 throw 한다.
  * 상대 경로는 작업 폴더가 아니라 홈 기준으로 해석한다.
  */
@@ -298,6 +378,10 @@ export function safePath(input: string): string {
     throw protectedPath();
   }
   if (isAppOwned(abs, real)) throw protectedPath();
+  const identity = fileIdentity(real);
+  if (identity?.linked && protectedInodes().has(identity.id)) {
+    throw new Error(`보호된 파일(키 자료, 앱 데이터 등)을 가리키는 하드 링크라 열 수 없어요: ${abs}`);
+  }
 
   // Node는 끝의 점과 공백을 그대로 전달해 탐색기로 지울 수 없는 파일이 생기고, 다른 Windows API는 그것을 지운 이름으로 해석한다.
   if (process.platform === 'win32' && real.slice(3).split(path.sep).some((s) => /[. ]$/.test(s))) {
@@ -305,6 +389,18 @@ export function safePath(input: string): string {
   }
 
   return real;
+}
+
+/**
+ * 허용된 경로인데 다른 이름과 내용을 공유하는 파일인가. 다른 이름이 어디 있는지는 알 수 없으므로 승인으로 넘긴다.
+ * 경로가 틀리면 false다. 실행 단계의 safePath가 오류로 알린다.
+ */
+export function isHardLink(input: string): boolean {
+  try {
+    return fileIdentity(safePath(input))?.linked ?? false;
+  } catch {
+    return false;
+  }
 }
 
 /** 쓰기용 검사. 읽기 금지 경로에 더해, 허용 폴더 밖과 코드가 실행되는 자리를 막는다. */
