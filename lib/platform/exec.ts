@@ -79,6 +79,37 @@ export function runWithStdin(bin: string, args: string[], input: string, timeout
   });
 }
 
+/** 표준 입력을 넘기고 표준 출력을 받아야 하는 명령. 비밀 값은 인자 대신 여기로 넘긴다. */
+export function runWithInput(bin: string, args: string[], input: string, timeoutMs = 5000): Promise<{ stdout: string }> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(bin, args, { windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'], env: childEnv() });
+    let stdout = '';
+    let stderr = '';
+    const timer = setTimeout(() => {
+      child.kill();
+      reject(new Error(`${bin} 실행 시간이 초과되었습니다`));
+    }, timeoutMs);
+    child.stdout.on('data', (d) => {
+      stdout += String(d);
+    });
+    child.stderr.on('data', (d) => {
+      stderr += String(d);
+    });
+    child.on('error', (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
+    child.on('close', (code) => {
+      clearTimeout(timer);
+      if (code === 0) resolve({ stdout });
+      else reject(new Error(stderr.trim() || `${bin} 종료 코드 ${code}`));
+    });
+    // 자식이 입력을 읽기 전에 끝나면 EPIPE가 난다. 처리하지 않으면 서버가 죽는다. 결과는 close에서 판단한다.
+    child.stdin.on('error', () => undefined);
+    child.stdin.end(input);
+  });
+}
+
 /** PATH에서 실행 파일을 동기적으로 찾는다. available() 판단용. */
 export function onPath(bin: string): boolean {
   const dirs = (process.env.PATH ?? '').split(delimiter).filter(Boolean);

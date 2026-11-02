@@ -16,6 +16,7 @@ export const GET = handle(async () => {
     hasApiKey: key.hasApiKey,
     apiKeySource: key.source,
     apiKeyHint: key.hint,
+    apiKeyStorage: key.storage,
     settings,
     dataDir: dataDir(),
     desktop: process.env.ILLIONAIRE_DESKTOP === '1',

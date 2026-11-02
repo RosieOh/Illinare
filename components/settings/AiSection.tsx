@@ -8,7 +8,7 @@ import { MODEL_PRESETS, type ModelPreset } from '@/lib/contracts';
 import { Badge, Button, Sheet, TextField, Toggle, useToast } from '@/components/glass';
 import { useApp } from '@/context/AppContext';
 import { api, ClientApiError } from '@/lib/client/api';
-import { formatCost } from '@/lib/client/format';
+import { formatCost, keyStorageNote } from '@/lib/client/format';
 import { Group, useSave } from './shared';
 
 const BUDGET_MIN = 0.05;
@@ -125,6 +125,7 @@ export function AiSection() {
           </div>
         )}
         {source === 'none' && <p className="mb-3 text-callout text-label-2">등록된 키가 없어요.</p>}
+        {keyStorageNote(bootstrap?.apiKeyStorage) && <p className="mb-3 text-subhead text-label-2">{keyStorageNote(bootstrap?.apiKeyStorage)}</p>}
 
         {source !== 'env' && (
           <form

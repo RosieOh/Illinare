@@ -98,6 +98,20 @@ export function updateJson<T>(file: string, fallback: T, fn: (current: T) => T):
   });
 }
 
+/**
+ * 읽기와 쓰기 사이에 비동기 작업이 있는 갱신(키 암호화 등). 파일 큐를 잡고 있으므로
+ * job 안에서 같은 파일에 writeJson이나 updateJson을 부르면 영원히 기다린다. 넘겨받은 write를 쓴다.
+ */
+export function withJsonFile<T, R>(
+  file: string,
+  fallback: T,
+  job: (current: T, write: (next: T) => Promise<void>) => Promise<R>
+): Promise<R> {
+  return enqueue(file, async () =>
+    job(await readJson(file, fallback), (next) => atomicWrite(file, JSON.stringify(next, null, 2), 0o600))
+  );
+}
+
 export function appendLine(file: string, line: string): Promise<void> {
   return enqueue(file, async () => {
     await fs.mkdir(dirname(file), { recursive: true });

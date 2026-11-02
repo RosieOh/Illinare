@@ -25,7 +25,7 @@ function readableError(raw: string): string {
 }
 
 function powershellPath(): string {
-  const root = process.env.SystemRoot ?? 'C:\Windows';
+  const root = process.env.SystemRoot ?? 'C:\\Windows';
   return join(root, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
 }
 

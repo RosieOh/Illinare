@@ -318,6 +318,12 @@ export const DEFAULT_SETTINGS: Settings = {
   onboarded: false,
 };
 
+/**
+ * API 키를 어떻게 보관하는가. 'file'은 OS 저장소를 쓸 수 없어 평문으로 둔 것이고,
+ * 'unreadable'은 보호된 키가 있지만 지금 풀 수 없는 것이다.
+ */
+export type ApiKeyStorage = 'env' | 'dpapi' | 'keychain' | 'secret-service' | 'file' | 'unreadable' | 'none';
+
 export interface Bootstrap {
   brand: typeof BRAND;
   platform: 'darwin' | 'win32' | 'linux';
@@ -328,6 +334,7 @@ export interface Bootstrap {
   apiKeySource: 'env' | 'stored' | 'none';
   /** 표시용 마스킹 키 (예: sk-ant-…a1b2) */
   apiKeyHint: string | null;
+  apiKeyStorage: ApiKeyStorage;
   settings: Settings;
   dataDir: string;
   /** Electron 패키징 여부 */

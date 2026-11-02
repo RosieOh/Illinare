@@ -92,7 +92,7 @@ describe('secrets', () => {
     const hint = await setApiKey('sk-ant-test-key-1234567890');
     expect(hint).toBe('sk-ant-…7890');
     expect(await getApiKey()).toBe('sk-ant-test-key-1234567890');
-    expect(await apiKeyInfo()).toEqual({ hasApiKey: true, source: 'stored', hint });
+    expect(await apiKeyInfo()).toEqual({ hasApiKey: true, source: 'stored', hint, storage: 'file' });
 
     process.env.ANTHROPIC_API_KEY = 'sk-ant-from-env-0000';
     try {
