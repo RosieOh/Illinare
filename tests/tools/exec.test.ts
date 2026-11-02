@@ -2,11 +2,30 @@ import { vi, afterEach, describe, expect, it } from 'vitest';
 
 // 실제 PowerShell을 띄우는 테스트라 전체 테스트와 함께 돌면 느려진다.
 vi.setConfig({ testTimeout: 60000 });
-import { childEnv, run } from '@/lib/platform/exec';
+import { childEnv, run, runWithStdin } from '@/lib/platform/exec';
 import { ps } from '@/lib/platform/powershell';
 import { FIND_START_APP } from '@/lib/platform/win32';
 
 const SECRET_KEYS = ['ILLIONAIRE_SESSION_TOKEN', 'ANTHROPIC_API_KEY', 'ANTHROPIC_AUTH_TOKEN'];
+
+describe('표준 입력을 받는 명령', () => {
+  // xclip처럼 스스로 백그라운드에 남아 stderr를 쥐고 있어도 성공으로 끝나야 한다.
+  it('자식이 파이프를 쥔 손자를 남기고 끝나도 기다리지 않는다', async () => {
+    const script =
+      "const { spawn } = require('node:child_process');" +
+      "process.stdin.resume();process.stdin.on('end',()=>{" +
+      "spawn(process.execPath,['-e','setTimeout(()=>{},6000)'],{stdio:['ignore','ignore','inherit'],detached:true}).unref();" +
+      'process.exit(0)});';
+    const started = Date.now();
+    await runWithStdin(process.execPath, ['-e', script], '일리네어', 5000);
+    expect(Date.now() - started).toBeLessThan(4500);
+  });
+
+  it('실패는 stderr와 함께 알린다', async () => {
+    const script = "process.stdin.resume();process.stdin.on('end',()=>{console.error('도구 오류');process.exit(3)});";
+    await expect(runWithStdin(process.execPath, ['-e', script], 'x', 5000)).rejects.toThrow('도구 오류');
+  });
+});
 
 describe('자식 프로세스 환경', () => {
   afterEach(() => {

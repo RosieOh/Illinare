@@ -163,12 +163,17 @@ describe('safeWritePath와 safePath: 실제 파일 시스템', () => {
   });
 
   it('protects app data even when home is reached through a junction', () => {
-    const appdata = path.join(home, 'AppData', 'Roaming');
-    const secret = path.join(appdata, 'Illionaire', 'data', 'secrets.json');
+    // 운영체제마다 앱 폴더 자리가 다르다 (lib/store/json.ts의 appRootDir).
+    const appRoot =
+      process.platform === 'win32'
+        ? ['AppData', 'Roaming', 'Illionaire']
+        : process.platform === 'darwin'
+          ? ['Library', 'Application Support', 'Illionaire']
+          : ['.local', 'share', 'illionaire'];
+    const inside = [...appRoot, 'data', 'secrets.json'];
+    const secret = path.join(home, ...inside);
     mkdirSync(path.dirname(secret), { recursive: true });
     writeFileSync(secret, '{}');
-    process.env.APPDATA = appdata;
-    process.env.XDG_DATA_HOME = path.join(home, '.local', 'share');
     delete process.env.ILLIONAIRE_DATA_DIR;
 
     const linked = path.join(root, 'homelink');
@@ -177,8 +182,8 @@ describe('safeWritePath와 safePath: 실제 파일 시스템', () => {
     process.env.APPDATA = path.join(linked, 'AppData', 'Roaming');
     process.env.XDG_DATA_HOME = path.join(linked, '.local', 'share');
     try {
-      expect(() => safePath('~/AppData/Roaming/Illionaire/data/secrets.json')).toThrow(/보호된 경로/);
-      expect(() => safePath(path.join(linked, 'AppData', 'Roaming', 'Illionaire', 'data', 'secrets.json'))).toThrow(/보호된 경로/);
+      expect(() => safePath(`~/${inside.join('/')}`)).toThrow(/보호된 경로/);
+      expect(() => safePath(path.join(linked, ...inside))).toThrow(/보호된 경로/);
     } finally {
       process.env[homeKey] = home;
       process.env.ILLIONAIRE_DATA_DIR = saved.data;

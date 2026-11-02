@@ -169,9 +169,10 @@ describe('a mission through the real tool layer', () => {
 
 describe('attachments from read_file', () => {
   it('sends a PDF as a document block, marks the step tainted, and keeps base64 out of events', async () => {
-    const { mkdtempSync, rmSync, writeFileSync } = await import('node:fs');
+    const { mkdirSync, mkdtempSync, rmSync, writeFileSync } = await import('node:fs');
     const { homedir } = await import('node:os');
     const { join } = await import('node:path');
+    mkdirSync(join(homedir(), 'Documents'), { recursive: true });
     const dir = mkdtempSync(join(homedir(), 'Documents', 'illionaire-pdf-test-'));
     const path = join(dir, '보고서.pdf');
     writeFileSync(path, '%PDF-1.4 secret-body');

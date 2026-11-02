@@ -70,6 +70,13 @@ export function runWithStdin(bin: string, args: string[], input: string, timeout
       clearTimeout(timer);
       reject(err);
     });
+    // xclip과 wl-copy는 클립보드를 내주려고 백그라운드에 남아 파이프를 쥐고 있어 close가 오지 않는다. 성공은 exit로 판단한다.
+    child.on('exit', (code) => {
+      if (code !== 0) return;
+      clearTimeout(timer);
+      child.stderr.destroy();
+      resolve();
+    });
     child.on('close', (code) => {
       clearTimeout(timer);
       if (code === 0) resolve();
